@@ -1,0 +1,111 @@
+---
+title: "edivalo-seedlings-natural-regen"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Setup and data structuring
+Loads libraries, sets up custom theme for ggplot, and reads in data
+```{r setup}
+library(plyr)
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+
+# theme for plotting
+theme_cw <- function () { 
+  theme_bw(base_size=12) %+replace% 
+    theme(
+      panel.background = element_blank(), 
+      plot.background = element_blank(), 
+      axis.ticks = element_line(colour = "grey70", size = rel(0.5)),
+      panel.grid.minor = element_blank(), 
+      panel.grid.major.x = element_blank(),
+      legend.background = element_blank(), 
+      legend.key = element_blank(),
+      strip.background = element_blank(), 
+      strip.text=element_text(size=12),
+      axis.text=element_text(size=12),
+      complete = TRUE
+    )
+}
+
+# Chhaya's path
+nat.seedlings <- read.csv("~/Dropbox/eDiValo-seedlings/Natural_Regen_2019_10.csv", stringsAsFactors = FALSE)
+#View(nat.seedlings)
+nat.seedlings[is.na(nat.seedlings)] <- 0
+
+# adding separate columns for exclosure, light, and fertilization treatments
+nat.seedlings$grazing <- 'sheep'
+nat.seedlings$grazing[grep('E', nat.seedlings$treat)] <- 'exclosure'
+nat.seedlings$nutrient <- 'unfertilized'
+nat.seedlings$nutrient[grep('F', nat.seedlings$treat)] <- 'fertilized'
+nat.seedlings$light <- 'control'
+nat.seedlings$light[grep('L', nat.seedlings$treat)] <- 'lamps'
+
+
+# column names other than species
+non.species.columns <- c('plot.id','treat','block','climate','subplot','grazing','nutrient','light') 
+
+# all species column names
+species.columns <- names(nat.seedlings)[!(names(nat.seedlings) %in% non.species.columns)] 
+
+# long format of data
+nat.seedlings.long <- nat.seedlings %>% 
+  pivot_longer(cols = species.columns, names_to = 'species', values_to = 'count')
+#View(nat.seedlings.long)
+```
+
+## Summary and plot
+
+
+```{r summary}
+# summary of total seedling count and species richness in each plot (combining subplots)
+nat.seedlings.plot.sum <- nat.seedlings.long %>% 
+  ddply(c('plot.id','treat','block','climate','grazing','nutrient','light'), 
+        summarise,
+        total = sum(count),
+        richness = sum(count > 0)
+  )
+
+
+nat.seedlings.summary <- nat.seedlings.plot.sum %>% 
+  ddply(c('grazing','nutrient','light'),
+        summarise, 
+        n = length(total),
+        total.mean = mean(total),
+        total.se = sd(total)/sqrt(n),
+        rich.mean = mean(richness),
+        rich.se = sd(richness)/sqrt(n))
+
+ggplot(nat.seedlings.summary, aes(x=nutrient, y=total.mean, 
+                                  ymin=total.mean-total.se, ymax=total.mean+total.se,
+                                  color=light)) +
+  facet_grid(.~grazing) +
+  geom_point(size=4, position=position_dodge(0.5)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.5)) +
+  ylab('Total seedling count') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = c(0.1, 0.9), legend.text=element_text(size=12))
+
+
+ggplot(nat.seedlings.summary, aes(x=nutrient, y=rich.mean, 
+                                  ymin=rich.mean-rich.se, ymax=rich.mean+rich.se,
+                                  color=light)) +
+  facet_grid(.~grazing) +
+  geom_point(size=4, position=position_dodge(0.5)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.5)) +
+  ylab('Seedling richness') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = c(0.1, 0.9), legend.text=element_text(size=12))
+```
+
