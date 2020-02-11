@@ -107,5 +107,7 @@ ggplot(nat.seedlings.summary, aes(x=nutrient, y=rich.mean,
   theme(text = element_text(size=12)) +
   scale_color_manual(values=c('black','orange'), name='') +
   theme(legend.position = c(0.1, 0.9), legend.text=element_text(size=12))
+
+# some text something new
 ```
 
