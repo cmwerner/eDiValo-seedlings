@@ -35,6 +35,9 @@ theme_cw <- function () {
 
 # Chhaya's path
 nat.seedlings <- read.csv("~/Dropbox/eDiValo-seedlings/Natural_Regen_2019_10.csv", stringsAsFactors = FALSE)
+
+# Mia's path
+
 #View(nat.seedlings)
 nat.seedlings[is.na(nat.seedlings)] <- 0
 
