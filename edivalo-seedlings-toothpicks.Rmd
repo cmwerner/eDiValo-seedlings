@@ -1,0 +1,92 @@
+---
+title: "edivalo-seedlings-toothpicks"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Setup and data structuring
+Loads libraries, sets up custom theme for ggplot, and reads in data
+```{r setup}
+library(plyr)
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+
+# theme for plotting
+theme_cw <- function () { 
+  theme_bw(base_size=12) %+replace% 
+    theme(
+      panel.background = element_blank(), 
+      plot.background = element_blank(), 
+      axis.ticks = element_line(colour = "grey70", size = rel(0.5)),
+      panel.grid.minor = element_blank(), 
+      panel.grid.major.x = element_blank(),
+      legend.background = element_blank(), 
+      legend.key = element_blank(),
+      strip.background = element_blank(), 
+      strip.text=element_text(size=12),
+      axis.text=element_text(size=12),
+      complete = TRUE
+    )
+}
+
+# Chhaya's path
+mark.seedlings <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/toothpick_seedling_data_2020_may.csv", stringsAsFactors = FALSE)
+
+# Mia's path
+
+#View(mark.seedlings)
+
+# adding separate columns for exclosure, light, and fertilization treatments
+mark.seedlings$grazing <- 'sheep'
+mark.seedlings$grazing[grep('E', mark.seedlings$plot)] <- 'exclosure'
+mark.seedlings$nutrient <- 'unfertilized'
+mark.seedlings$nutrient[grep('F', mark.seedlings$plot)] <- 'fertilized'
+mark.seedlings$light <- 'control'
+mark.seedlings$light[grep('L', mark.seedlings$plot)] <- 'lamps'
+
+# summary of total number by species and plot
+mark.summary <- mark.seedlings %>% ddply(c('block','plot','grazing','nutrient','light','species'),
+                                           summarise,
+                                           count = sum(number),
+                                           count.2 = sum(number>0))
+
+```
+
+## Visualization plots
+
+```{r}
+mark.plot <- mark.summary %>% 
+  ddply(c('grazing','nutrient','light','species'),
+        summarise, 
+        plots.present = length(count),
+        total.mean = sum(count)/10,
+        total.se = sd(count)/sqrt(10))
+
+plantago <- filter(mark.plot, species=="plantago lan")
+daucus <- filter(mark.plot, species=="daucus car")
+medicago <- filter(mark.plot, species=="medicago fal.")
+dianthus <- filter(mark.plot, species=="dianthus car")
+galium <- filter(mark.plot, species=="galium alb")
+crebis <- filter(mark.plot, species=="crebis bie")
+
+ggplot(plantago, aes(x=nutrient, y=total.mean, 
+                                  ymin=total.mean-total.se, ymax=total.mean+total.se,
+                                  color=light)) +
+  facet_grid(.~grazing) +
+  geom_point(size=4, position=position_dodge(0.5)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.5)) +
+  ylab('Total seedling count') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = c(0.1, 0.9), legend.text=element_text(size=12))
+
+ggsave(filename = 'plantago_may.pdf', width=6, height=4, units='in')
+
+```
+
