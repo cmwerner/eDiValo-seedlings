@@ -34,7 +34,7 @@ theme_cw <- function () {
 }
 
 # Chhaya's path
-mark.seedlings <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/toothpick_seedling_data_2020_may.csv", stringsAsFactors = FALSE)
+mark.seedlings <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/toothpick_seedling_data_2020_all.csv", stringsAsFactors = FALSE)
 
 # Mia's path
 
@@ -48,9 +48,9 @@ mark.seedlings$nutrient[grep('F', mark.seedlings$plot)] <- 'fertilized'
 mark.seedlings$light <- 'control'
 mark.seedlings$light[grep('L', mark.seedlings$plot)] <- 'lamps'
 
-# summary of total number by species and plot
-mark.summary <- mark.seedlings %>% ddply(c('block','plot','grazing','nutrient','light','species'),
-                                           summarise,
+# summary of total number by species, plot, and month
+mark.summary <- mark.seedlings %>% ddply(c('block','plot','grazing','nutrient','light','species','month'),
+                                         summarise,
                                            count = sum(number),
                                            count.2 = sum(number>0))
 
@@ -60,7 +60,7 @@ mark.summary <- mark.seedlings %>% ddply(c('block','plot','grazing','nutrient','
 
 ```{r}
 mark.plot <- mark.summary %>% 
-  ddply(c('grazing','nutrient','light','species'),
+  ddply(c('grazing','nutrient','light','species','month'),
         summarise, 
         plots.present = length(count),
         total.mean = sum(count)/10,
@@ -73,20 +73,55 @@ dianthus <- filter(mark.plot, species=="dianthus car")
 galium <- filter(mark.plot, species=="galium alb")
 crebis <- filter(mark.plot, species=="crebis bie")
 
-ggplot(plantago, aes(x=nutrient, y=total.mean, 
-                                  ymin=total.mean-total.se, ymax=total.mean+total.se,
-                                  color=light)) +
+## everything
+ggplot(mark.plot, aes(x=nutrient, y=total.mean, 
+                     ymin=total.mean-total.se, ymax=total.mean+total.se,
+                     color=light, shape=grazing)) +
+  facet_grid(month~species) +
+  geom_point(size=4, position=position_dodge(0.5)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.5)) +
+  ylab('Seedling count') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'top', legend.text=element_text(size=12))
+
+ggsave(filename = 'species_time.pdf', width=10, height=8, units='in')
+
+## Plantago April
+ggplot(filter(plantago, month==4),
+       aes(x=nutrient, y=total.mean, 
+                     ymin=total.mean-total.se, ymax=total.mean+total.se,
+                     color=light)) +
   facet_grid(.~grazing) +
   geom_point(size=4, position=position_dodge(0.5)) +
   geom_errorbar(width=0.2, position=position_dodge(0.5)) +
-  ylab('Total seedling count') +
+  ylab('Plantago seedling count') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = c(0.9, 0.9), legend.text=element_text(size=12))
+
+ggsave(filename = 'plantago_april.pdf', width=6, height=4, units='in')
+
+## Dianthus April
+ggplot(filter(dianthus, month==4),
+       aes(x=nutrient, y=total.mean, 
+                     ymin=total.mean-total.se, ymax=total.mean+total.se,
+                     color=light)) +
+  facet_grid(.~grazing) +
+  geom_point(size=4, position=position_dodge(0.5)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.5)) +
+  ylab('Dianthus seedling count') +
   xlab('') +
   theme_cw() +
   theme(text = element_text(size=12)) +
   scale_color_manual(values=c('black','orange'), name='') +
   theme(legend.position = c(0.1, 0.9), legend.text=element_text(size=12))
 
-ggsave(filename = 'plantago_may.pdf', width=6, height=4, units='in')
+ggsave(filename = 'dianthus_april.pdf', width=6, height=4, units='in')
 
 ```
 
