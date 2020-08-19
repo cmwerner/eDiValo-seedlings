@@ -42,9 +42,14 @@ nat.seedlings.05 <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/natural_reg
 nat.seedlings.06 <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/natural_regen_2020_06.csv", stringsAsFactors = FALSE)
 
 # Want to combine these together
+<<<<<<< HEAD
 # remove . and spaces
 names(nat.seedlings.10) <- gsub("[^a-z]","", names(nat.seedlings.10))
 names(nat.seedlings.03) <- gsub("[^a-z]","", names(nat.seedlings.03)) 
+=======
+names(nat.seedlings.10) <- gsub("[^a-z]","", names(nat.seedlings.10))
+names(nat.seedlings.03) <- gsub("[^a-z]","", names(nat.seedlings.03)) # removal. and spaces
+>>>>>>> 3fb26786c1882d92334f9bcc36fe0dbfc5418105
 names(nat.seedlings.05) <- gsub("[^a-z]","", names(nat.seedlings.05))
 names(nat.seedlings.06) <- gsub("[^a-z]","", names(nat.seedlings.06))
 
@@ -111,6 +116,7 @@ nat.seedlings.plot.sum$plotid <- as_factor(nat.seedlings.plot.sum$plotid)
 Plots of total seedling count and seedling richness
 ```{r summary-plot}
 
+<<<<<<< HEAD
 # just looking at fall and spring (march) since these are
 # 1. more abudnant 
 # 2. less likely to have repeats (require time series analyses)
@@ -119,6 +125,10 @@ nat.seedlings.plot.sum.2 <- nat.seedlings.plot.sum %>%
 
 # plot by month and treatments
 nat.seedlings.summary <- nat.seedlings.plot.sum.2 %>% 
+=======
+# plot by month and treatments
+nat.seedlings.summary <- nat.seedlings.plot.sum %>% 
+>>>>>>> 3fb26786c1882d92334f9bcc36fe0dbfc5418105
   ddply(c('grazing','nutrient','light','month'),
         summarise, 
         n = length(total),
@@ -130,10 +140,17 @@ nat.seedlings.summary <- nat.seedlings.plot.sum.2 %>%
 ggplot(nat.seedlings.summary, aes(x=nutrient, y=total.mean, 
                                   ymin=total.mean-total.se,
                                   ymax=total.mean+total.se,
+<<<<<<< HEAD
                                   color=light)) +
   facet_grid(month~grazing) +
   geom_point(size=2, position=position_dodge(0.2)) +
   geom_errorbar(width=0.2, position=position_dodge(0.2)) +
+=======
+                                  color=light, shape=grazing)) +
+  facet_grid(month~.) +
+  geom_point(size=4, position=position_dodge(0.5)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.5)) +
+>>>>>>> 3fb26786c1882d92334f9bcc36fe0dbfc5418105
   ylab('Total seedling count') +
   xlab('') +
   theme_cw() +
