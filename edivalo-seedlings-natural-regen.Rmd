@@ -14,6 +14,8 @@ library(plyr)
 library(tidyverse)
 library(ggplot2)
 library(ggthemes)
+library(lme4)
+library(lmerTest)
 
 # theme for plotting
 theme_cw <- function () { 
@@ -78,7 +80,7 @@ nat.seedlings$nutrient <- 'unfertilized'
 nat.seedlings$nutrient[grep('F', nat.seedlings$treat)] <- 'fertilized'
 nat.seedlings$light <- 'control'
 nat.seedlings$light[grep('L', nat.seedlings$treat)] <- 'lamps'
-
+nat.seedlings$block <- as.integer((nat.seedlings$plotid - 1)/8) + 1
 
 # column names other than species
 non.species.columns <-c('plotid','treat','block','climate','subplot',
@@ -92,12 +94,7 @@ species.columns <- names(nat.seedlings)[!(names(nat.seedlings) %in% non.species.
 nat.seedlings.long <- nat.seedlings %>% 
   pivot_longer(cols = species.columns, names_to = 'species', values_to = 'count')
 #View(nat.seedlings.long)
-```
 
-## Summary and plot
-
-
-```{r summary}
 # summary of total seedling count and species richness in each plot (combining subplots)
 # split by month
 nat.seedlings.plot.sum <- nat.seedlings.long %>% 
@@ -106,9 +103,17 @@ nat.seedlings.plot.sum <- nat.seedlings.long %>%
         total = sum(count),
         richness = sum(count > 0)
   )
+nat.seedlings.plot.sum$block <- as_factor(nat.seedlings.plot.sum$block)
+nat.seedlings.plot.sum$plotid <- as_factor(nat.seedlings.plot.sum$plotid)
+```
 
-# just looking at fall and spring since these are
-# 1. more abudnant 2. less likely to have repeats (require time series analyses)
+## Total seedlings and richness summary and plot
+Plots of total seedling count and seedling richness
+```{r summary-plot}
+
+# just looking at fall and spring (march) since these are
+# 1. more abudnant 
+# 2. less likely to have repeats (require time series analyses)
 nat.seedlings.plot.sum.2 <- nat.seedlings.plot.sum %>%
   filter(month %in% c('2019_10', '2020_03'))
 
@@ -136,21 +141,80 @@ ggplot(nat.seedlings.summary, aes(x=nutrient, y=total.mean,
   scale_color_manual(values=c('black','orange'), name='') +
   theme(legend.position = 'bottom', legend.text=element_text(size=12))
 
-ggsave(filename = 'species_time.pdf', width=6, height=5, units='in')
+ggsave(filename = 'nat_regen_total_time.pdf', width=6, height=5, units='in')
 
 ggplot(nat.seedlings.summary, aes(x=nutrient, y=rich.mean, 
-                                  ymin=rich.mean-rich.se, ymax=rich.mean+rich.se,
+                                  ymin=rich.mean-rich.se, 
+                                  ymax=rich.mean+rich.se,
                                   color=light)) +
-  facet_grid(.~grazing) +
-  geom_point(size=4, position=position_dodge(0.5)) +
-  geom_errorbar(width=0.2, position=position_dodge(0.5)) +
+  facet_grid(month~grazing) +
+  geom_point(size=2, position=position_dodge(0.2)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.2)) +
   ylab('Seedling richness') +
   xlab('') +
   theme_cw() +
   theme(text = element_text(size=12)) +
   scale_color_manual(values=c('black','orange'), name='') +
-  theme(legend.position = c(0.1, 0.9), legend.text=element_text(size=12))
+  theme(legend.position = 'bottom', legend.text=element_text(size=12))
+ggsave(filename = 'nat_regen_richness_time.pdf', width=6, height=5, units='in')
 
-# some text something new
 ```
-# Mias version
+
+## Total seedlings and richness analysis
+
+Just looking at October and March time points as separate models. I think we can make the argument that if we do it this way we won't need time series analyses since we expect Oct seedlings to have died or grown by March, mostly not resampling the same individuals. But there are other approaches to this that use the time series angle.
+
+```{r summary-analysis}
+nat.seedlings.fall <- nat.seedlings.plot.sum %>% filter(month == '2019_10')
+nat.seedlings.spring <- nat.seedlings.plot.sum %>% filter(month == '2020_03')
+
+# want to use block:plot for random effect, but have the error
+# number of levels of each grouping factor must be < number of observations
+# would need a meta-plot that is the grazing x fert treatment instead
+model.total.fall <- nat.seedlings.fall %>%
+  lmer(total ~ grazing * nutrient * light + (1|block),.)
+summary(model.total.fall) # 3-way interaction
+
+model.total.spring <- nat.seedlings.spring %>%
+  lmer(total ~ grazing * nutrient * light + (1|block),.)
+summary(model.total.spring) 
+# 2-way interaction grazing x fertilization, marginal effect of lamps
+
+model.rich.fall <- nat.seedlings.fall %>%
+  glmer(richness ~ grazing * nutrient * light + (1|block),.,
+        family = poisson(link = "log"))
+summary(model.rich.fall) # sheep x nutrients marginal
+
+model.rich.spring <- nat.seedlings.spring %>%
+  glmer(richness ~ grazing * nutrient * light + (1|block),.,
+        family = poisson(link = "log"))
+summary(model.rich.spring) # sheep x nutrients, 3-way marginal
+
+```
+
+
+Another approach would be to lump the fall and spring data for full plot totals
+```{r both-seasons}
+nat.seedlings.long.fallspring <- nat.seedlings.long %>%
+  filter(month %in% c('2019_10', '2020_03'))
+nat.seedlings.plot.both <- nat.seedlings.long.fallspring %>% 
+  ddply(c('plotid','treat','block','climate','grazing','nutrient','light'), 
+        summarise,
+        total = sum(count),
+        richness = sum(count > 0)
+  )
+nat.seedlings.plot.both$block <- as_factor(nat.seedlings.plot.both$block)
+nat.seedlings.plot.both$plotid <- as_factor(nat.seedlings.plot.both$plotid)
+
+model.total.both <- nat.seedlings.plot.both %>%
+  lmer(total ~ grazing * nutrient * light + (1|block),.)
+summary(model.total.both) # only sheep x nutrients (3-way interaction marginal)
+
+model.rich.both <- nat.seedlings.plot.both %>%
+  glmer(richness ~ grazing * nutrient * light + (1|block),.,
+        family = poisson(link = "log"))
+summary(model.rich.both) # 3-way interaction
+
+```
+
+
