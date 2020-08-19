@@ -34,7 +34,36 @@ theme_cw <- function () {
 }
 
 # Chhaya's path
-nat.seedlings <- read.csv("~/Dropbox/eDiValo-seedlings/Natural_Regen_2019_10.csv", stringsAsFactors = FALSE)
+nat.seedlings.10 <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/natural_regen_2019_10.csv", stringsAsFactors = FALSE)
+nat.seedlings.03 <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/natural_regen_2020_03.csv", stringsAsFactors = FALSE)
+nat.seedlings.05 <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/natural_regen_2020_05.csv", stringsAsFactors = FALSE)
+nat.seedlings.06 <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/natural_regen_2020_06.csv", stringsAsFactors = FALSE)
+
+# Want to combine these together
+names(nat.seedlings.10) <- gsub("[^a-z]","", names(nat.seedlings.10))
+names(nat.seedlings.03) <- gsub("[^a-z]","", names(nat.seedlings.03)) # removal. and spaces
+names(nat.seedlings.05) <- gsub("[^a-z]","", names(nat.seedlings.05))
+names(nat.seedlings.06) <- gsub("[^a-z]","", names(nat.seedlings.06))
+
+# small cleaning issues
+nat.seedlings.10$subplot <- ifelse(nat.seedlings.10$subplot==1, "O", "I")
+nat.seedlings.03$falvul <- as.integer(substr(nat.seedlings.03$falvul, 1, 1))
+nat.seedlings.05 <- nat.seedlings.05[,1:43] # removing blank columsn at the end
+
+# add in year_month time point
+nat.seedlings.10$month <- '2019_10'
+nat.seedlings.03$month <- '2020_03'
+nat.seedlings.05$month <- '2020_05'
+nat.seedlings.06$month <- '2020_06'
+
+nat.seedlings.a <- full_join(nat.seedlings.10, nat.seedlings.03)
+nat.seedlings.b <- full_join(nat.seedlings.05, nat.seedlings.06)
+nat.seedlings <- full_join(nat.seedlings.a, nat.seedlings.b)
+nat.seedlings <- nat.seedlings %>% select(month, everything()) # move month to the front
+
+# total observations of each
+seedling.sums <- colSums(nat.seedlings[7:47], na.rm=TRUE)
+
 
 # Mia's path
 
@@ -51,7 +80,9 @@ nat.seedlings$light[grep('L', nat.seedlings$treat)] <- 'lamps'
 
 
 # column names other than species
-non.species.columns <- c('plot.id','treat','block','climate','subplot','grazing','nutrient','light') 
+non.species.columns <-c('plotid','treat','block','climate','subplot',
+                        'grazing','nutrient','light',
+                         'month', 'date') 
 
 # all species column names
 species.columns <- names(nat.seedlings)[!(names(nat.seedlings) %in% non.species.columns)] 
@@ -67,16 +98,17 @@ nat.seedlings.long <- nat.seedlings %>%
 
 ```{r summary}
 # summary of total seedling count and species richness in each plot (combining subplots)
+# split by month
 nat.seedlings.plot.sum <- nat.seedlings.long %>% 
-  ddply(c('plot.id','treat','block','climate','grazing','nutrient','light'), 
+  ddply(c('plotid','treat','block','climate','grazing','nutrient','light','month'), 
         summarise,
         total = sum(count),
         richness = sum(count > 0)
   )
 
-
+# plot by month and treatments
 nat.seedlings.summary <- nat.seedlings.plot.sum %>% 
-  ddply(c('grazing','nutrient','light'),
+  ddply(c('grazing','nutrient','light','month'),
         summarise, 
         n = length(total),
         total.mean = mean(total),
@@ -85,9 +117,10 @@ nat.seedlings.summary <- nat.seedlings.plot.sum %>%
         rich.se = sd(richness)/sqrt(n))
 
 ggplot(nat.seedlings.summary, aes(x=nutrient, y=total.mean, 
-                                  ymin=total.mean-total.se, ymax=total.mean+total.se,
-                                  color=light)) +
-  facet_grid(.~grazing) +
+                                  ymin=total.mean-total.se,
+                                  ymax=total.mean+total.se,
+                                  color=light, shape=grazing)) +
+  facet_grid(month~.) +
   geom_point(size=4, position=position_dodge(0.5)) +
   geom_errorbar(width=0.2, position=position_dodge(0.5)) +
   ylab('Total seedling count') +
