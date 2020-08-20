@@ -5,10 +5,6 @@ output:
   html_document: default
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ## Setup and data structuring
 Loads libraries, sets up custom theme for ggplot, and reads in data (code not printed)
 ```{r setup2, include=FALSE, warning=FALSE, message=FALSE}
@@ -112,18 +108,16 @@ nat.seedlings.plot.sum <- nat.seedlings.long %>%
   )
 nat.seedlings.plot.sum$block <- as_factor(nat.seedlings.plot.sum$block)
 nat.seedlings.plot.sum$plotid <- as_factor(nat.seedlings.plot.sum$plotid)
+nat.seedlings.plot.sum$month <- as_factor(nat.seedlings.plot.sum$month)
+
+nat.seedlings.plot.sum.2 <- filter(nat.seedlings.plot.sum, 
+                                   month %in% c('2019_10','2020_03','2020_05'))
 ```
 
 ## Total seedlings count
 Summary for plotting total and richness (code not printed)
 ```{r summary-plot, echo=FALSE, warning=FALSE, message=FALSE}
 #NOTE: currently doesn't print warnings or messages, take this out while coding
-
-# just looking at fall and spring (march) since these are
-# 1. more abudnant 
-# 2. less likely to have repeats (require time series analyses)
-nat.seedlings.plot.sum.2 <- nat.seedlings.plot.sum %>%
-  filter(month %in% c('2019_10', '2020_03'))
 
 # summarize by month and treatments for plotting
 nat.seedlings.summary <- nat.seedlings.plot.sum.2 %>% 
@@ -143,6 +137,7 @@ Summary for analyzing total and richness (code not printed)
 # splitting data into just fall or just spring for modeling
 nat.seedlings.fall <- nat.seedlings.plot.sum %>% filter(month == '2019_10')
 nat.seedlings.spring <- nat.seedlings.plot.sum %>% filter(month == '2020_03')
+nat.seedlings.late <- nat.seedlings.plot.sum %>% filter(month == '2020_05')
 
 # combined fall and spring together
 nat.seedlings.long.fallspring <- nat.seedlings.long %>%
@@ -179,6 +174,21 @@ ggplot(nat.seedlings.summary, aes(x=nutrient, y=total.mean,
 ```
 
 ### Total seedling analysis
+
+#### With time
+```{r total-seedling-time, echo=FALSE, warning=FALSE, message=FALSE}
+model.total <- nat.seedlings.plot.sum %>%
+  lmer(total ~ grazing + nutrient + light + month +
+         grazing:nutrient + grazing:light + grazing:month +
+         nutrient:light + nutrient:month + light:month +
+         grazing:nutrient:light + 
+         (1|block:plotid),.)
+tbl_regression(model.total, 
+               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
+  'grazing:light','nutrient:light','grazing:nutrient:light'))
+```
+
+
 Looking at October and March time points as 1. separate models or 2. a combined sum. I think we can make the argument that if we do it this way we won't need time series analyses since we expect Oct seedlings to have died or grown by March, mostly not resampling the same individuals. But there are other approaches to this that use the time series angle.
 
 #### Fall only
@@ -192,7 +202,7 @@ model.total.fall <- nat.seedlings.fall %>%
   lmer(total ~ grazing * nutrient * light + (1|block),.)
 tbl_regression(model.total.fall, 
                show_single_row = c('grazing','nutrient','light','grazing:nutrient',
-                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
+  'grazing:light','nutrient:light','grazing:nutrient:light'))
 ```
 
 #### Spring only
@@ -218,6 +228,7 @@ tbl_regression(model.total.both,
 
 ```
 
+
 ## Seedling richness
 ### Seedling richness plot
 ```{r summary-plot-richness, echo=FALSE, warning=FALSE, message=FALSE}
@@ -239,6 +250,19 @@ ggplot(nat.seedlings.summary, aes(x=nutrient, y=rich.mean,
 ```
 
 ### Seedling richness analysis
+#### With time
+```{r rich-seedling-time, echo=FALSE, warning=FALSE, message=FALSE}
+model.richness <- nat.seedlings.plot.sum %>%
+  lmer(richness ~ grazing + nutrient + light + month +
+         grazing:nutrient + grazing:light + grazing:month +
+         nutrient:light + nutrient:month + light:month +
+         grazing:nutrient:light + 
+         (1|block:plotid),.)
+tbl_regression(model.richness, 
+               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
+  'grazing:light','nutrient:light','grazing:nutrient:light'))
+```
+
 #### Fall only
 ```{r rich-seedling-fall, echo=FALSE, warning=FALSE, message=FALSE}
 #NOTE: currently doesn't print warnings or messages, take this out while coding
@@ -279,6 +303,16 @@ tbl_regression(model.richness.both,
 
 ```
 
+#### April/May 
+```{r rich-seedling-late, echo=FALSE, warning=FALSE, message=FALSE}
+#NOTE: currently doesn't print warnings or messages, take this out while coding
 
+model.richness.late <- nat.seedlings.late %>%
+  glmer(richness ~ grazing * nutrient * light + (1|block),.,
+        family = poisson(link="log"))
+tbl_regression(model.richness.late, 
+               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
+                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
+```
 
 
