@@ -72,6 +72,10 @@ seedling.sums <- colSums(nat.seedlings[7:47], na.rm=TRUE)
 
 
 # Mia's path
+nat.seedlings.10 <- read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/natural_regen_2019_10.csv", stringsAsFactors = FALSE)
+nat.seedlings.03 <- read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/natural_regen_2020_03.csv", stringsAsFactors = FALSE)
+nat.seedlings.05 <- read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/natural_regen_2020_05.csv", stringsAsFactors = FALSE)
+nat.seedlings.06 <- read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/natural_regen_2020_06.csv", stringsAsFactors = FALSE)
 
 #View(nat.seedlings)
 nat.seedlings[is.na(nat.seedlings)] <- 0
