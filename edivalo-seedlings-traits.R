@@ -8,6 +8,13 @@ library(ggplot2)
 # Chhaya's path
 seedlings.size <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/seedling_trait_size.csv", 
                            stringsAsFactors = FALSE)[,1:7]
+
+# Mia's path
+seedlings.size <- read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/seedling_trait_size.csv", 
+                           stringsAsFactors = FALSE)[,1:7]
+# for Mia: change name of fist column to species 
+colnames(seedlings.size)[1]<-"species"
+
 View(seedlings.size)
 
 # calculated metrics: root-shoot length and biomass, total biomass
@@ -53,10 +60,20 @@ species.size.3$toothpicks <- species.size.3$species %in% toothpick.list
 
 ### SLA ----------------
 
+# Chhaya's path
 seedlings.leaf <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/seedling_trait_SLA.csv", 
                            stringsAsFactors = FALSE)[,1:6]
+
+# Mia's path
+#seedlings.leaf <- read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/seedling_trait_SLA.csv", 
+#                           stringsAsFactors = FALSE)[,1:6]
+# For Mia: change name of first column to species
+# colnames(seedlings.leaf)[1]<-"species"
+
 View(seedlings.leaf)
+
 seedlings.leaf$species <- tolower(seedlings.leaf$species)
+
 ## still need a lot of the species to be entered
 
 # notes: data frame is currently sorted by individuals (10/species) and leaf
