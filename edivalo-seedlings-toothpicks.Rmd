@@ -37,8 +37,10 @@ theme_cw <- function () {
 mark.seedlings <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/toothpick_seedling_data_2020_all.csv", stringsAsFactors = FALSE)
 
 # Mia's path
-
+mark.seedlings<-read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/toothpick_seedling_data_2020_all.csv", stringsAsFactors = FALSE)
 #View(mark.seedlings)
+# For Mia: change first column name to month
+colnames(mark.seedlings)[1]<-"month"
 
 # adding separate columns for exclosure, light, and fertilization treatments
 mark.seedlings$grazing <- 'sheep'
