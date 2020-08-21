@@ -97,11 +97,17 @@ non.species.columns <-c('plotid','treat','block','climate','subplot',
 species.columns <- names(nat.seedlings)[!(names(nat.seedlings) %in% non.species.columns)] 
 
 # long format of data
+# also grouping the subplots together here
 nat.seedlings.long <- nat.seedlings %>% 
-  pivot_longer(cols = species.columns, names_to = 'species', values_to = 'count')
+  pivot_longer(cols = species.columns, 
+               names_to = 'species', values_to = 'count') %>%
+  group_by(plotid, treat, block, grazing, nutrient, light, species, month) %>%
+  dplyr::summarise(
+    count = sum(count)
+  )
 #View(nat.seedlings.long)
 
-# summary of total seedling count and species richness in each plot (combining subplots)
+# summary of total seedling count and species richness in each plot
 # split by month
 nat.seedlings.plot.sum <- nat.seedlings.long %>% 
   ddply(c('plotid','treat','block','climate','grazing','nutrient','light','month'), 
@@ -319,9 +325,111 @@ tbl_regression(model.richness.late,
 ```
 
 ## Seedling Traits--Biomass data
-```{r biomass traits}
 
+For the trait analyses we will look at the data sliced a slightly different way--the max number of seedlings per species across the time points (peak emergence for each species)
+```{r trait-biomass}
 
+# max across time points (seems to be working, still want to triple-check it)
+nat.seedlings.max <- nat.seedlings.long %>%
+  group_by(plotid, treat, block, grazing, nutrient, light, species) %>%
+  dplyr::summarise(
+    count.max = max(count)
+  )
+
+# combine with trait data, 
+# filter down to the species for which we have trait data
+nat.seedlings.traits <- nat.seedlings.max %>% 
+  left_join(species.size.6, by = 'species') %>% 
+  filter(!is.na(bm.tot))
+
+# summary by species for ggplot
+nat.seedlings.traits.sum <- nat.seedlings.traits %>%
+  group_by(grazing, nutrient, light, species) %>%
+  dplyr::summarise(
+    abundance = mean(count.max),
+    abundance.se = sd(count.max)/sqrt(10),
+    bm.tot = mean(bm.tot), 
+    rt.sh.bm = mean(rt.sh.bm),
+    len.sh = mean(len.sh)
+    # traits should be the same as their values, double-check
+  )
 
 ```
 
+### Total biomass plot
+Preliminary plot of raw data
+```{r trait-biomass-plot}
+
+## all species with trait data
+ggplot(nat.seedlings.traits.sum, aes(x = bm.tot, y = abundance, 
+                                  ymin = abundance - abundance.se,
+                                  ymax = abundance + abundance.se,
+                                  color = light)) +
+  facet_grid(nutrient~grazing) +
+  geom_point(size=1) +
+  geom_errorbar(width=0) +
+  geom_smooth(method = 'glm', se = FALSE) +
+  ylab('Seedling abundance') +
+  xlab('Total biomass') +
+  theme_cw() +
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'bottom', legend.text=element_text(size=12))
+
+```
+
+### Total biomass analysis
+Preliminary analysis of total biomass trait. Going to have to think about what distribution is appropriate--probably negative binomial, or an explicitly zero inflated model. This isn't working yet. 
+```{r trait-biomass-analysis}
+m.biomass.poiss <- nat.seedlings.traits %>% 
+  glmer(count.max ~ grazing + nutrient + light + bm.tot +
+          grazing:nutrient + grazing:light + grazing:bm.tot + 
+          nutrient:light + nutrient:bm.tot + light:bm.tot + (1|block:plotid),
+          family = poisson(link = "log"), .)
+
+```
+
+
+### Root-shoot plot
+Preliminary plot of raw data
+```{r trait-rtsh-plot}
+
+## all species with trait data
+ggplot(nat.seedlings.traits.sum, aes(x = rt.sh.bm, y = abundance, 
+                                  ymin = abundance - abundance.se,
+                                  ymax = abundance + abundance.se,
+                                  color = light)) +
+  facet_grid(nutrient~grazing) +
+  geom_point(size=1) +
+  geom_errorbar(width=0) +
+  geom_smooth(method = 'glm', se = FALSE) +
+  ylab('Seedling abundance') +
+  xlab('Root:shoot ratio (biomass)') +
+  theme_cw() +
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'bottom', legend.text=element_text(size=12))
+
+```
+
+### Shoot length plot
+Preliminary plot of raw data
+```{r trait-length-plot}
+
+## all species with trait data
+ggplot(nat.seedlings.traits.sum, aes(x = len.sh, y = abundance, 
+                                  ymin = abundance - abundance.se,
+                                  ymax = abundance + abundance.se,
+                                  color = light)) +
+  facet_grid(nutrient~grazing) +
+  geom_point(size=1) +
+  geom_errorbar(width=0) +
+  geom_smooth(method = 'glm', se = FALSE) +
+  ylab('Seedling abundance') +
+  xlab('Shoot length') +
+  theme_cw() +
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'bottom', legend.text=element_text(size=12))
+
+```
