@@ -30,7 +30,8 @@ theme_cw <- function () {
 }
 
 # Chhaya's path
-mark.seedlings <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/toothpick_seedling_data_2020_all.csv", stringsAsFactors = FALSE)
+mark.seedlings <- read.csv("data/toothpick_seedling_data_2020_all.csv",
+                           stringsAsFactors = FALSE)
 
 # Mia's path
 #mark.seedlings<-read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/toothpick_seedling_data_2020_all.csv", stringsAsFactors = FALSE)

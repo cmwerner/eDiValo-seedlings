@@ -6,14 +6,14 @@ library(ggplot2)
 
 ### Biomass and Length ---------------
 # Chhaya's path
-seedlings.size <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/seedling_trait_size.csv", 
+seedlings.size <- read.csv("data/seedling_trait_size.csv", 
                            stringsAsFactors = FALSE)[,1:7]
 
 # Mia's path
-seedlings.size <- read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/seedling_trait_size.csv", 
-                           stringsAsFactors = FALSE)[,1:7]
+# seedlings.size <- read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/seedling_trait_size.csv", 
+#                            stringsAsFactors = FALSE)[,1:7]
 # for Mia: change name of fist column to species 
-colnames(seedlings.size)[1]<-"species"
+# colnames(seedlings.size)[1]<-"species"
 
 View(seedlings.size)
 
@@ -61,7 +61,7 @@ species.size.3$toothpicks <- species.size.3$species %in% toothpick.list
 ### SLA ----------------
 
 # Chhaya's path
-seedlings.leaf <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/seedling_trait_SLA.csv", 
+seedlings.leaf <- read.csv("data/seedling_trait_SLA.csv", 
                            stringsAsFactors = FALSE)[,1:6]
 
 # Mia's path

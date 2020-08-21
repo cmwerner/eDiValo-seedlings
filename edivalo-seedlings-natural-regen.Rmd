@@ -37,11 +37,15 @@ theme_cw <- function () {
     )
 }
 
-# Chhaya's path
-nat.seedlings.10 <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/natural_regen_2019_10.csv", stringsAsFactors = FALSE)
-nat.seedlings.03 <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/natural_regen_2020_03.csv", stringsAsFactors = FALSE)
-nat.seedlings.05 <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/natural_regen_2020_05.csv", stringsAsFactors = FALSE)
-nat.seedlings.06 <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/natural_regen_2020_06.csv", stringsAsFactors = FALSE)
+nat.seedlings.10 <- read.csv("data/natural_regen_2019_10.csv", 
+                             stringsAsFactors = FALSE)
+nat.seedlings.03 <- read.csv("data/natural_regen_2020_03.csv", 
+                             stringsAsFactors = FALSE)
+nat.seedlings.05 <- read.csv("data/natural_regen_2020_05.csv", 
+                             stringsAsFactors = FALSE)
+nat.seedlings.06 <- read.csv("data/natural_regen_2020_06.csv", 
+                             stringsAsFactors = FALSE)
+
 
 # Want to combine these together
 # remove . and spaces
@@ -71,12 +75,6 @@ nat.seedlings <- nat.seedlings %>% select(month, everything()) # move month to t
 # total observations of each
 seedling.sums <- colSums(nat.seedlings[7:47], na.rm=TRUE)
 
-
-# Mia's path
-nat.seedlings.10 <- read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/natural_regen_2019_10.csv", stringsAsFactors = FALSE)
-nat.seedlings.03 <- read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/natural_regen_2020_03.csv", stringsAsFactors = FALSE)
-nat.seedlings.05 <- read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/natural_regen_2020_05.csv", stringsAsFactors = FALSE)
-nat.seedlings.06 <- read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/natural_regen_2020_06.csv", stringsAsFactors = FALSE)
 
 #View(nat.seedlings)
 nat.seedlings[is.na(nat.seedlings)] <- 0
@@ -320,4 +318,10 @@ tbl_regression(model.richness.late,
                                    'grazing:light','nutrient:light','grazing:nutrient:light'))
 ```
 
+## Seedling Traits--Biomass data
+```{r biomass traits}
+
+
+
+```
 
