@@ -3,14 +3,10 @@ title: "edivalo-seedlings-toothpicks"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ## Setup and data structuring
 Loads libraries, sets up custom theme for ggplot, and reads in data
 ```{r setup}
-library(plyr)
+#library(plyr)
 library(tidyverse)
 library(ggplot2)
 library(ggthemes)
@@ -49,10 +45,11 @@ mark.seedlings$light <- 'control'
 mark.seedlings$light[grep('L', mark.seedlings$plot)] <- 'lamps'
 
 # summary of total number by species, plot, and month
-mark.summary <- mark.seedlings %>% ddply(c('block','plot','grazing','nutrient','light','species','month'),
-                                         summarise,
-                                           count = sum(number),
-                                           count.2 = sum(number>0))
+mark.summary <- mark.seedlings %>%
+    group_by(block, plot, grazing, nutrient, light, species, month) %>%
+  dplyr::summarize(
+    count = sum(number),
+    count.2 = sum(number>0))
 
 ```
 
@@ -60,11 +57,11 @@ mark.summary <- mark.seedlings %>% ddply(c('block','plot','grazing','nutrient','
 
 ```{r}
 mark.plot <- mark.summary %>% 
-  ddply(c('grazing','nutrient','light','species','month'),
-        summarise, 
-        plots.present = length(count),
-        total.mean = sum(count)/10,
-        total.se = sd(count)/sqrt(10))
+  group_by(grazing, nutrient, light, species, month) %>%
+  dplyr::summarize(
+    plots.present = length(count),
+    total.mean = sum(count)/10,
+    total.se = sd(count)/sqrt(10))
 
 plantago <- filter(mark.plot, species=="plantago lan")
 daucus <- filter(mark.plot, species=="daucus car")

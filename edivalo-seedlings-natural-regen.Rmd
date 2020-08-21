@@ -17,6 +17,7 @@ library(ggthemes)
 library(lme4)
 library(lmerTest)
 library(gtsummary)
+source('edivalo-seedlings-traits.R', local=TRUE) # script with the trait data
 
 # theme for plotting
 theme_cw <- function () { 

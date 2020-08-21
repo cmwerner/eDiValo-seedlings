@@ -20,7 +20,7 @@ seedlings.size$treatment <- factor(seedlings.size$treatment,
 # average for each species (rather than by individual)
 species.size <- seedlings.size %>% 
   group_by(treatment, species) %>%
-  summarize(bm.sh = mean(shoot.bm),
+  dplyr::summarize(bm.sh = mean(shoot.bm),
             bm.rt = mean(root.bm),
             bm.tot = mean(total.bm),
             len.sh = mean(shoot.length),
@@ -54,7 +54,7 @@ species.size.3$toothpicks <- species.size.3$species %in% toothpick.list
 ### SLA ----------------
 
 seedlings.leaf <- read.csv("~/Dropbox/eDiValo-seedlings/Data Entry/seedling_trait_SLA.csv", 
-                           stringsAsFactors = FALSE)[,1:5]
+                           stringsAsFactors = FALSE)[,1:6]
 View(seedlings.leaf)
 seedlings.leaf$species <- tolower(seedlings.leaf$species)
 ## still need a lot of the species to be entered
@@ -64,19 +64,16 @@ seedlings.leaf$species <- tolower(seedlings.leaf$species)
 # in some cases, the 3rd leaf was smaller than leaf 1+2 due to collection timing
 # want to check any analyses we do to make sure they're robust to using 2 or 3 leaves
 
-# Also: still need to convert pixel size to actual area
-seedlings.leaf$sla.px <- seedlings.leaf$size.pixels/seedlings.leaf$biomass.mg
-hist(seedlings.leaf$sla.px) 
-# a couple of these are much higher than expected, check for data entry errors
-filter(seedlings.leaf, sla.px>12000) # seem to just be genuine outliers
-
+seedlings.leaf$sla.mm2 <- seedlings.leaf$size.mm2/seedlings.leaf$biomass.mg
+ 
+# note: this is a good place to check for data entry errors (extreme values)
 
 species.sla <- seedlings.leaf %>% 
   group_by(species) %>%
-  summarize(leaf.weight = mean(biomass.mg),
-            leaf.area = mean(size.pixels),
-            sla = mean(sla.px), # using all three leaves
-            sla.2 = mean(sla.px[leaf %in% c(1,2)])) # using only the first two leaves
+  dplyr::summarize(leaf.weight = mean(biomass.mg),
+            leaf.area = mean(size.mm2),
+            sla = mean(sla.mm2), # using all three leaves
+            sla.2 = mean(sla.mm2[leaf %in% c(1,2)])) # using only the first two leaves
 
 ## add in to main trait df
 species.size.4 <- species.size.3 %>%
