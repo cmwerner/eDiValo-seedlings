@@ -15,7 +15,7 @@ seedlings.size <- read.csv("data/seedling_trait_size.csv",
 # for Mia: change name of fist column to species 
 # colnames(seedlings.size)[1]<-"species"
 
-View(seedlings.size)
+# View(seedlings.size)
 
 # calculated metrics: root-shoot length and biomass, total biomass
 seedlings.size$root.shoot.length <- seedlings.size$root.length / seedlings.size$shoot.length
@@ -70,7 +70,7 @@ seedlings.leaf <- read.csv("data/seedling_trait_SLA.csv",
 # For Mia: change name of first column to species
 # colnames(seedlings.leaf)[1]<-"species"
 
-View(seedlings.leaf)
+# View(seedlings.leaf)
 
 seedlings.leaf$species <- tolower(seedlings.leaf$species)
 
