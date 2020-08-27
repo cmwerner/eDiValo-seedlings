@@ -379,6 +379,7 @@ m.p.specific <- glmmTMB(count.max ~ grazing * nutrient + light + (1|species) +
                  nat.seedlings.max, family = poisson)
 
 # negative binomial
+
 m.nb.basic <- glmmTMB(count.max ~ grazing + nutrient + light + (1|species) +
                    (1|block:plotid), 
                  nat.seedlings.max, family = nbinom2)
