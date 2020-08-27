@@ -10,14 +10,15 @@ Loads libraries, sets up custom theme for ggplot, and reads in data (code not pr
 ```{r setup2, include=FALSE, warning=FALSE, message=FALSE}
 #NOTE: currently doesn't print warnings or messages, take this out while coding
 
-library(plyr)
-library(tidyverse)
-library(ggplot2)
-library(ggthemes)
-library(lme4)
-library(lmerTest)
-library(gtsummary)
-library(glmmTMB)
+library(plyr) # data structuring
+library(tidyverse) # data structuring
+library(ggplot2) # plotting
+library(ggthemes) # plotting
+library(lme4) # basic models
+library(lmerTest) # p-values on basic models
+library(gtsummary) # pretty tables
+library(glmmTMB) # glmm with zero-inflation
+library(bbmle) # model comparison tables
 source('edivalo-seedlings-traits.R', local=TRUE) # script with the trait data
 
 # theme for plotting
@@ -360,13 +361,48 @@ nat.seedlings.traits.sum <- nat.seedlings.traits %>%
 ### Species traits abundance models
 The data is overdispersed and/or zero-inflated. We want to try to put together a model format that seems reasonable (perhaps even without the trait data). For this we'll be using the 'glmmTMB' package, which is detailed in "glmmTMB Balances Speed and Flexibility Among Packages for Zero-inflated Generalized Linear Mixed Modeling" by Brooks et al 2017. In this paper, they use the AICtab() function in the 'bblme' package for AIC comparisons of different models. 
 
-Options for model distrubtions are: Poisson, negative binomial, Conway-Maxwell-Poisson, zero-inflated structures for those, and hurdle models. Starting with just negative binomial. 
+Options for model distrubtions are: Poisson, negative binomial, Conway-Maxwell-Poisson, zero-inflated structures for those, and hurdle models. compois doesn't seem to be working at the moment, not sure why; negative binomial is much better than poisson, and minorly underdispersed according to the residuals
 
 ```{r basic-models}
+
+# poisson
+m.p.basic <- glmmTMB(count.max ~ grazing + nutrient + light + (1|species) +
+                   (1|block:plotid), 
+                 nat.seedlings.max, family = poisson)
+
+m.p.full <- glmmTMB(count.max ~ grazing * nutrient * light + (1|species) +
+                   (1|block:plotid), 
+                 nat.seedlings.max, family = poisson)
+
+m.p.specific <- glmmTMB(count.max ~ grazing * nutrient + light + (1|species) +
+                   (1|block:plotid), 
+                 nat.seedlings.max, family = poisson)
+
 # negative binomial
-m.nb1 <- glmmTMB(count.max ~ grazing + species +
+m.nb.basic <- glmmTMB(count.max ~ grazing + nutrient + light + (1|species) +
                    (1|block:plotid), 
                  nat.seedlings.max, family = nbinom2)
+
+m.nb.full <- glmmTMB(count.max ~ grazing * nutrient * light + (1|species) +
+                   (1|block:plotid), 
+                 nat.seedlings.max, family = nbinom2)
+
+m.nb.specific <- glmmTMB(count.max ~ grazing * nutrient + light + (1|species) +
+                   (1|block:plotid), 
+                 nat.seedlings.max, family = nbinom2)
+
+
+# zi poisson
+
+# zi neg binomial
+
+AICtab(m.p.basic, m.p.full, m.p.specific, 
+       m.nb.basic, m.nb.full, m.nb.specific)
+
+E2 <- resid(m.nb.specific, type = "pearson")
+N  <- nrow(nat.seedlings.max)
+p  <- length(coef(m.nb.specific)) 
+sum(E2^2) / (N - p)
 
 ```
 
@@ -394,14 +430,45 @@ ggplot(nat.seedlings.traits.sum, aes(x = bm.tot, y = abundance,
 ```
 
 ### Total biomass analysis
-Preliminary analysis of total biomass trait. Going to have to think about what distribution is appropriate--probably negative binomial, or an explicitly zero inflated model. This isn't working yet. 
-```{r trait-biomass-analysis}
-m.biomass.poiss <- nat.seedlings.traits %>% 
-  glmer(count.max ~ grazing + nutrient + light + bm.tot +
-          grazing:nutrient + grazing:light + grazing:bm.tot + 
-          nutrient:light + nutrient:bm.tot + light:bm.tot + (1|block:plotid),
-          family = poisson(link = "log"), .)
+Preliminary analysis of total biomass trait using a negative binomial distribution. Also want to consider using a zero-inflated model and comparing using AIC. Right now the result is that having a random effect for species is a better fit than using the total biomass trait, and adding the biomass trait after the species doesn't make much of a difference. Will be interesting to see how this changes with the other traits/the full dataset. 
 
+For the zi setup, could consider doing a random factor for species in the zero-inflation part, and then the trait in the abundance-if-present part? 
+```{r trait-biomass-analysis}
+
+m.biomass.0 <- glmmTMB(count.max ~ grazing * nutrient + light +
+                         (1|species) + (1|block:plotid),
+                       nat.seedlings.traits, family = nbinom2)
+
+m.biomass.1 <- glmmTMB(count.max ~ grazing * nutrient + light + bm.tot +
+                         (1|block:plotid), 
+                 nat.seedlings.traits, family = nbinom2)
+
+m.biomass.1b <- glmmTMB(count.max ~ grazing * nutrient + light + bm.tot +
+                         (1|species) + (1|block:plotid), 
+                 nat.seedlings.traits, family = nbinom2)
+
+m.biomass.2 <- glmmTMB(count.max ~ grazing * nutrient + light + bm.tot +
+                         grazing*nutrient*bm.tot + light*bm.tot +
+                         (1|block:plotid),  
+                 nat.seedlings.traits, family = nbinom2)
+
+m.biomass.full <- glmmTMB(count.max ~ grazing * nutrient + light + bm.tot +
+                            grazing*nutrient*bm.tot + light*grazing*bm.tot + 
+                            nutrient*light*bm.tot +
+                         (1|block:plotid), 
+                 nat.seedlings.traits, family = nbinom2)
+
+m.biomass.specific <- glmmTMB(count.max ~ grazing * nutrient + light + bm.tot +
+                            light*grazing*bm.tot + 
+                         (1|block:plotid), 
+                 nat.seedlings.traits, family = nbinom2)
+
+AICtab(m.biomass.0, m.biomass.1, m.biomass.1b, m.biomass.2, m.biomass.full, m.biomass.specific)
+
+E2 <- resid(m.biomass.specific, type = "pearson")
+N  <- nrow(nat.seedlings.traits)
+p  <- length(coef(m.biomass.specific)) 
+sum(E2^2) / (N - p) # somewhat overdispersed
 ```
 
 
