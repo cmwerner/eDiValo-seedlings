@@ -17,6 +17,7 @@ library(ggthemes)
 library(lme4)
 library(lmerTest)
 library(gtsummary)
+library(glmmTMB)
 source('edivalo-seedlings-traits.R', local=TRUE) # script with the trait data
 
 # theme for plotting
@@ -101,7 +102,7 @@ species.columns <- names(nat.seedlings)[!(names(nat.seedlings) %in% non.species.
 nat.seedlings.long <- nat.seedlings %>% 
   pivot_longer(cols = species.columns, 
                names_to = 'species', values_to = 'count') %>%
-  group_by(plotid, treat, block, grazing, nutrient, light, species, month) %>%
+  group_by(plotid, treat, block,climate, grazing, nutrient, light, species, month) %>%
   dplyr::summarise(
     count = sum(count)
   )
@@ -356,6 +357,20 @@ nat.seedlings.traits.sum <- nat.seedlings.traits %>%
 
 ```
 
+### Species traits abundance models
+The data is overdispersed and/or zero-inflated. We want to try to put together a model format that seems reasonable (perhaps even without the trait data). For this we'll be using the 'glmmTMB' package, which is detailed in "glmmTMB Balances Speed and Flexibility Among Packages for Zero-inflated Generalized Linear Mixed Modeling" by Brooks et al 2017. In this paper, they use the AICtab() function in the 'bblme' package for AIC comparisons of different models. 
+
+Options for model distrubtions are: Poisson, negative binomial, Conway-Maxwell-Poisson, zero-inflated structures for those, and hurdle models. Starting with just negative binomial. 
+
+```{r basic-models}
+# negative binomial
+m.nb1 <- glmmTMB(count.max ~ grazing + species +
+                   (1|block:plotid), 
+                 nat.seedlings.max, family = nbinom2)
+
+```
+
+
 ### Total biomass plot
 Preliminary plot of raw data
 ```{r trait-biomass-plot}
@@ -433,3 +448,5 @@ ggplot(nat.seedlings.traits.sum, aes(x = len.sh, y = abundance,
   theme(legend.position = 'bottom', legend.text=element_text(size=12))
 
 ```
+
+
