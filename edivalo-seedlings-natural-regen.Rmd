@@ -364,7 +364,7 @@ Options for model distrubtions are: Poisson, negative binomial, Conway-Maxwell-P
 
 ```{r basic-models}
 # negative binomial
-m.nb1 <- glmmTMB(count.max ~ grazing + species +
+m.nb1 <- glmmTMB(count.max ~ grazing*nutrient + (1|species) +
                    (1|block:plotid), 
                  nat.seedlings.max, family = nbinom2)
 
