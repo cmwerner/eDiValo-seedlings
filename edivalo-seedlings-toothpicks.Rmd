@@ -1,11 +1,13 @@
 ---
 title: "edivalo-seedlings-toothpicks"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ## Setup and data structuring
-Loads libraries, sets up custom theme for ggplot, and reads in data
-```{r setup}
+Loads libraries, sets up custom theme for ggplot, and reads in data (code not printed)
+```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
 #library(plyr)
 library(tidyverse)
 library(ggplot2)
@@ -13,7 +15,7 @@ library(ggthemes)
 
 # theme for plotting
 theme_cw <- function () { 
-  theme_bw(base_size=12) %+replace% 
+  theme_bw(base_size=10) %+replace% 
     theme(
       panel.background = element_blank(), 
       plot.background = element_blank(), 
@@ -23,8 +25,8 @@ theme_cw <- function () {
       legend.background = element_blank(), 
       legend.key = element_blank(),
       strip.background = element_blank(), 
-      strip.text=element_text(size=12),
-      axis.text=element_text(size=12),
+      strip.text=element_text(size=10),
+      axis.text=element_text(size=10),
       complete = TRUE
     )
 }
@@ -58,7 +60,9 @@ mark.summary <- mark.seedlings %>%
 
 ## Visualization plots
 
-```{r}
+### All species through time
+Taking a first look at our data, just the abundance counts of the six species through time. Months are listed on the right side (2-February to 7-July). Seedling abundance was generally highest in March-April-May, and the most common species were Plantago lanceolata and Dianthus. 
+```{r full, echo=FALSE, warning=FALSE, message=FALSE}
 mark.plot <- mark.summary %>% 
   group_by(grazing, nutrient, light, species, month) %>%
   dplyr::summarize(
@@ -78,18 +82,24 @@ ggplot(mark.plot, aes(x=nutrient, y=total.mean,
                      ymin=total.mean-total.se, ymax=total.mean+total.se,
                      color=light, shape=grazing)) +
   facet_grid(month~species) +
-  geom_point(size=4, position=position_dodge(0.5)) +
-  geom_errorbar(width=0.2, position=position_dodge(0.5)) +
+  geom_point(size=2, position=position_dodge(0.2)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.2)) +
   ylab('Seedling count') +
   xlab('') +
+  scale_x_discrete(labels=c("fertilized" = "fert", "unfertilized" = "unfert")) +
   theme_cw() +
-  theme(text = element_text(size=12)) +
+  theme(text = element_text(size=10)) +
   scale_color_manual(values=c('black','orange'), name='') +
-  theme(legend.position = 'top', legend.text=element_text(size=12))
+  theme(legend.position = 'top', legend.text=element_text(size=10))
 
-ggsave(filename = 'species_time.pdf', width=10, height=8, units='in')
+#ggsave(filename = 'species_time.pdf', width=10, height=8, units='in')
 
-## Plantago April
+```
+
+Now zooming in on just the most common species to see how they may be responding to treatments.
+
+### April abundance of Plantago
+```{r april-plantago, echo=FALSE, warning=FALSE, message=FALSE}
 ggplot(filter(plantago, month==4),
        aes(x=nutrient, y=total.mean, 
                      ymin=total.mean-total.se, ymax=total.mean+total.se,
@@ -102,11 +112,13 @@ ggplot(filter(plantago, month==4),
   theme_cw() +
   theme(text = element_text(size=12)) +
   scale_color_manual(values=c('black','orange'), name='') +
-  theme(legend.position = c(0.9, 0.9), legend.text=element_text(size=12))
+  theme(legend.position = c(0.9, 0.9), legend.text=element_text(size=10))
+```
 
-ggsave(filename = 'plantago_april.pdf', width=6, height=4, units='in')
 
-## Dianthus April
+### April abundance of Dianthus
+
+```{r april-dianthus, echo=FALSE, warning=FALSE, message=FALSE}
 ggplot(filter(dianthus, month==4),
        aes(x=nutrient, y=total.mean, 
                      ymin=total.mean-total.se, ymax=total.mean+total.se,
@@ -119,9 +131,10 @@ ggplot(filter(dianthus, month==4),
   theme_cw() +
   theme(text = element_text(size=12)) +
   scale_color_manual(values=c('black','orange'), name='') +
-  theme(legend.position = c(0.1, 0.9), legend.text=element_text(size=12))
-
-ggsave(filename = 'dianthus_april.pdf', width=6, height=4, units='in')
-
+  theme(legend.position = c(0.1, 0.9), legend.text=element_text(size=10))
 ```
 
+
+## Next steps
+Separately analyzing emergence and survival (rather than just abundance) for all species. 
+Incorporating trait data. 
