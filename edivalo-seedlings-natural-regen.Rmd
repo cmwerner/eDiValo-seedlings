@@ -103,7 +103,7 @@ species.columns <- names(nat.seedlings)[!(names(nat.seedlings) %in% non.species.
 nat.seedlings.long <- nat.seedlings %>% 
   pivot_longer(cols = species.columns, 
                names_to = 'species', values_to = 'count') %>%
-  group_by(plotid, treat, block,climate, grazing, nutrient, light, species, month) %>%
+  group_by(plotid, treat, block, climate, grazing, nutrient, light, species, month) %>%
   dplyr::summarise(
     count = sum(count)
   )
@@ -112,11 +112,12 @@ nat.seedlings.long <- nat.seedlings %>%
 # summary of total seedling count and species richness in each plot
 # split by month
 nat.seedlings.plot.sum <- nat.seedlings.long %>% 
-  ddply(c('plotid','treat','block','climate','grazing','nutrient','light','month'), 
-        summarise,
-        total = sum(count),
+  group_by(plotid, treat, block, climate, grazing, nutrient, light, month) %>%
+  dplyr::summarise(
+    total = sum(count),
         richness = sum(count > 0)
   )
+
 nat.seedlings.plot.sum$block <- as_factor(nat.seedlings.plot.sum$block)
 nat.seedlings.plot.sum$plotid <- as_factor(nat.seedlings.plot.sum$plotid)
 nat.seedlings.plot.sum$month <- as_factor(nat.seedlings.plot.sum$month)
@@ -132,13 +133,14 @@ Summary for plotting total and richness (code not printed)
 
 # summarize by month and treatments for plotting
 nat.seedlings.summary <- nat.seedlings.plot.sum.2 %>% 
-  ddply(c('grazing','nutrient','light','month'),
-        summarise, 
-        n = length(total),
+  group_by(grazing, nutrient, light, month) %>%
+  dplyr::summarise(
+    n = length(total),
         total.mean = mean(total),
         total.se = sd(total)/sqrt(n),
         rich.mean = mean(richness),
-        rich.se = sd(richness)/sqrt(n))
+        rich.se = sd(richness)/sqrt(n)
+  )
 
 ```
 
@@ -153,12 +155,14 @@ nat.seedlings.late <- nat.seedlings.plot.sum %>% filter(month == '2020_05')
 # combined fall and spring together
 nat.seedlings.long.fallspring <- nat.seedlings.long %>%
   filter(month %in% c('2019_10', '2020_03'))
+
 nat.seedlings.plot.both <- nat.seedlings.long.fallspring %>% 
-  ddply(c('plotid','treat','block','climate','grazing','nutrient','light'), 
-        summarise,
-        total = sum(count),
+  group_by(plotid, treat, block, climate, grazing, nutrient, light) %>%
+  dplyr::summarise(
+    total = sum(count),
         richness = sum(count > 0)
   )
+
 nat.seedlings.plot.both$block <- as_factor(nat.seedlings.plot.both$block)
 nat.seedlings.plot.both$plotid <- as_factor(nat.seedlings.plot.both$plotid)
 ```
