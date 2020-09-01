@@ -153,19 +153,34 @@ emergence.summary <- mark.emergence %>%
 
 ```
 
+### Emergence Plot
 Plotting emergence by species and treatment
-```{r emergence-plot}
+```{r emergence-plot, echo=FALSE, warning=FALSE, message=FALSE}
 emergence.plot <- emergence.summary %>%
   group_by(grazing, nutrient, light, species) %>%
   dplyr::summarize(
     n = 10,
-    n.check = length(num.emerged.2),
     emergence.mean = mean(num.emerged.2, na.rm = TRUE),
     emergence.se = sd(num.emerged.2)/sqrt(n)
   )
 
-```
+ggplot(emergence.plot,
+       aes(x=grazing, y=emergence.mean, 
+           ymin=emergence.mean-emergence.se, ymax=emergence.mean+emergence.se,
+           color=light, shape = nutrient)) +
+  facet_wrap(vars(species)) +
+  geom_point(size=3, position=position_dodge(0.3)) +
+  geom_errorbar(width=0.1, position=position_dodge(0.3)) +
+  ylab('Seedling emergence') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=10)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'right', legend.text=element_text(size=10))
 
+```
+### Emergence Analysis
+Starting off with a separate model for each species. We may only be able to get useful models for Plantago and Dianthus, but it's possible that models for Galium and/or Medicago will also converge. We can also explore combining these into models that include species id as an effect (probably having it interact with )
 
 ## Next steps
 Separately analyzing emergence and survival (rather than just abundance) for all species. 
