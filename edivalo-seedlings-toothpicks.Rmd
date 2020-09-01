@@ -134,7 +134,41 @@ ggplot(filter(dianthus, month==4),
   theme(legend.position = c(0.1, 0.9), legend.text=element_text(size=10))
 ```
 
+## Emergence
+Data re-structuring to look at emergence rather than abundance
+```{r emergence-data, echo=FALSE, warning=FALSE, message=FALSE}
+mark.emergence <- mark.seedlings %>%
+  group_by(block, plot, grazing, nutrient, light, species, id..1.6.) %>%
+  dplyr::summarize(
+    emergence.2 = max(number),
+    emergence.1 = ifelse(emergence.2 > 0, 1, 0)
+    )
+
+emergence.summary <- mark.emergence %>%
+  group_by(block, plot, grazing, nutrient, light, species) %>%
+  dplyr::summarise(
+    num.emerged.2 = sum(emergence.2),
+    num.emerged.1 = sum(emergence.1)
+  )
+
+```
+
+Plotting emergence by species and treatment
+```{r emergence-plot}
+emergence.plot <- emergence.summary %>%
+  group_by(grazing, nutrient, light, species) %>%
+  dplyr::summarize(
+    n = 10,
+    n.check = length(num.emerged.2),
+    emergence.mean = mean(num.emerged.2, na.rm = TRUE),
+    emergence.se = sd(num.emerged.2)/sqrt(n)
+  )
+
+```
+
 
 ## Next steps
 Separately analyzing emergence and survival (rather than just abundance) for all species. 
 Incorporating trait data. 
+
+
