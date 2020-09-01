@@ -34,6 +34,7 @@ theme_cw <- function () {
 # Chhaya's path
 mark.seedlings <- read.csv("data/toothpick_seedling_data_2020_all.csv",
                            stringsAsFactors = FALSE)
+plot.list <- read.csv("data/plot_list.csv", stringsAsFactors = FALSE)
 
 # Mia's path
 #mark.seedlings<-read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/toothpick_seedling_data_2020_all.csv", stringsAsFactors = FALSE)
@@ -55,6 +56,10 @@ mark.summary <- mark.seedlings %>%
   dplyr::summarize(
     count = sum(number),
     count.2 = sum(number>0))
+
+# combine plot numbers and treatments together in plot list file
+plot.list$plot <- paste(plot.list$plotid, plot.list$treat, sep="")
+plot.list$block <- rep(1:10, each = 8)
 
 ```
 
@@ -135,8 +140,11 @@ ggplot(filter(dianthus, month==4),
 ```
 
 ## Emergence
-Data re-structuring to look at emergence rather than abundance
+Data re-structuring to look at emergence rather than abundance. We also want to add in zeros for the ones that are missing for the analyses, we're using a complete plot list for this. It is multiplied to have all the species in each plot. 
+
 ```{r emergence-data, echo=FALSE, warning=FALSE, message=FALSE}
+
+# for each toothpick, if one or two seedlings emerged
 mark.emergence <- mark.seedlings %>%
   group_by(block, plot, grazing, nutrient, light, species, id..1.6.) %>%
   dplyr::summarize(
@@ -144,31 +152,87 @@ mark.emergence <- mark.seedlings %>%
     emergence.1 = ifelse(emergence.2 > 0, 1, 0)
     )
 
+# summary of number of seedlings emerged per species per plot
 emergence.summary <- mark.emergence %>%
   group_by(block, plot, grazing, nutrient, light, species) %>%
   dplyr::summarise(
-    num.emerged.2 = sum(emergence.2),
-    num.emerged.1 = sum(emergence.1)
+    emerged = sum(emergence.2),
+    emerged.1 = sum(emergence.1)
   )
+
+# setting up the full data frame with zeros
+species.list <- unique(mark.plot$species)
+plot.rep <- rep.int(plot.list$plot, length(species.list))
+block.rep <- rep.int(plot.list$block, length(species.list))
+species.rep <- rep(species.list, each=length(plot.list$plot))
+
+emergence.summary.min <- emergence.summary %>%
+  ungroup() %>%
+  select(., plot, species, emerged, emerged.1)
+
+emergence.full <- data.frame(plot = plot.rep, species = species.rep, block = block.rep) %>%
+  left_join(emergence.summary.min, by = c('plot', 'species'))
+
+# consider turning this into a function?
+emergence.full$grazing <- 'sheep'
+emergence.full$grazing[grep('E', emergence.full$plot)] <- 'exclosure'
+emergence.full$nutrient <- 'unfertilized'
+emergence.full$nutrient[grep('F', emergence.full$plot)] <- 'fertilized'
+emergence.full$light <- 'control'
+emergence.full$light[grep('L', emergence.full$plot)] <- 'lamps'
+
+# changing added 'na' rows to zeros
+emergence.full$emerged[is.na(emergence.full$emerged)] <- 0
+emergence.full$emerged.1[is.na(emergence.full$emerged.1)] <- 0
 
 ```
 
+### Emergence Plot
 Plotting emergence by species and treatment
-```{r emergence-plot}
-emergence.plot <- emergence.summary %>%
+```{r emergence-plot, echo=FALSE, warning=FALSE, message=FALSE}
+emergence.plot <- emergence.full %>%
   group_by(grazing, nutrient, light, species) %>%
   dplyr::summarize(
-    n = 10,
-    n.check = length(num.emerged.2),
-    emergence.mean = mean(num.emerged.2, na.rm = TRUE),
-    emergence.se = sd(num.emerged.2)/sqrt(n)
+    n = length(emerged),
+    emergence.mean = mean(emerged, na.rm = TRUE),
+    emergence.se = sd(emerged)/sqrt(n)
   )
+
+ggplot(emergence.plot,
+       aes(x=grazing, y=emergence.mean, 
+           ymin=emergence.mean-emergence.se, ymax=emergence.mean+emergence.se,
+           color=light, shape = nutrient)) +
+  facet_wrap(vars(species)) +
+  geom_point(size=3, position=position_dodge(0.3)) +
+  geom_errorbar(width=0.1, position=position_dodge(0.3)) +
+  ylab('Seedling emergence') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=10)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'right', legend.text=element_text(size=10))
+
+```
+### Emergence Analysis
+Starting off with a separate model for each species. We may only be able to get useful models for Plantago and Dianthus, but it's possible that models for Galium and/or Medicago will also converge. We can also explore combining these into models that include species id as an effect (probably having it interact with ).
+
+Probably going to want a negative binomial distribution and/or a zero-inflated model for these emergence counts, similar to the models of the naturally regenerating seedlings. Can approach the model structure and model selection in the same way to keep the methods consistent. 
+
+```{r emergence-analysis}
+
+emerg.pla <- emergence.full %>% filter(species == 'plantago lan')
+emerg.dia <- emergence.full %>% filter(species == 'dianthus car')
+
+
+
 
 ```
 
 
 ## Next steps
-Separately analyzing emergence and survival (rather than just abundance) for all species. 
-Incorporating trait data. 
+Analyzing emergence for individual species
+Analyzing emergence for species combined into a single model?
+Structuring and analyzing survival
+Incorporating trait data
 
 
