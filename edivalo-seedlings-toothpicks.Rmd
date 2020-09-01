@@ -190,6 +190,7 @@ emergence.full$emerged.1[is.na(emergence.full$emerged.1)] <- 0
 ### Emergence Plot
 Plotting emergence by species and treatment
 ```{r emergence-plot, echo=FALSE, warning=FALSE, message=FALSE}
+
 emergence.plot <- emergence.full %>%
   group_by(grazing, nutrient, light, species) %>%
   dplyr::summarize(
@@ -227,7 +228,6 @@ emerg.dia <- emergence.full %>% filter(species == 'dianthus car')
 
 
 ```
-
 
 ## Next steps
 Analyzing emergence for individual species
