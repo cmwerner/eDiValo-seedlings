@@ -5,7 +5,7 @@ library(GGally)
 library(ggplot2)
 
 ### Biomass and Length ---------------
-# Chhaya's path
+# main path
 seedlings.size <- read.csv("data/seedling_trait_size.csv", 
                            stringsAsFactors = FALSE)[,1:7]
 
@@ -60,9 +60,10 @@ species.size.3$toothpicks <- species.size.3$species %in% toothpick.list
 
 ### SLA ----------------
 
-# Chhaya's path
+# main path
 seedlings.leaf <- read.csv("data/seedling_trait_SLA.csv", 
-                           stringsAsFactors = FALSE)[,1:6]
+                           stringsAsFactors = FALSE) %>%
+  select(group:size.mm2)
 
 # Mia's path
 #seedlings.leaf <- read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/seedling_trait_SLA.csv", 
@@ -74,19 +75,19 @@ seedlings.leaf <- read.csv("data/seedling_trait_SLA.csv",
 
 seedlings.leaf$species <- tolower(seedlings.leaf$species)
 
-## still need a lot of the species to be entered
 
 # notes: data frame is currently sorted by individuals (10/species) and leaf
 # where 1 is the first emergent leaf, 2 is the second, and 3 is the third
 # in some cases, the 3rd leaf was smaller than leaf 1+2 due to collection timing
 # want to check any analyses we do to make sure they're robust to using 2 or 3 leaves
 
+# We only have mass (and therefore SLA) for forbs, not for the grasses
+
 seedlings.leaf$sla.mm2 <- seedlings.leaf$size.mm2/seedlings.leaf$biomass.mg
  
-# note: this is a good place to check for data entry errors (extreme values)
 
 species.sla <- seedlings.leaf %>% 
-  group_by(species) %>%
+  group_by(group, species) %>%
   dplyr::summarize(leaf.weight = mean(biomass.mg),
             leaf.area = mean(size.mm2),
             sla = mean(sla.mm2), # using all three leaves
@@ -96,47 +97,73 @@ species.sla <- seedlings.leaf %>%
 species.size.4 <- species.size.3 %>%
   left_join(species.sla, by='species')
 
-## even more condensed to key traits
-species.size.5 <- species.size.4 %>% 
-  select(species, bm.tot, len.sh, rt.sh.bm,
-         bm.sh, bm.rt, sla, sla.2, toothpicks)
+
+### C:N---------------
+# main path
+seedlings.cn <- read.csv("data/seedling_trait_CN.csv", 
+                           stringsAsFactors = FALSE) %>% 
+  select(species = sample, c.perc, n.perc) %>%
+  filter(!is.na(c.perc))
+
+# calculate C:N ratio
+seedlings.cn$c.n.ratio <- seedlings.cn$c.perc / seedlings.cn$n.perc
+
+## add in to main trait df
+species.size.5 <- species.size.4 %>%
+  left_join(seedlings.cn, by='species')
 
 ### Visualization Plots-----------------
+## condensed to key traits and just the forbs
+species.size.6 <- species.size.5 %>% 
+  filter(group=='forb') %>%
+  select(species, bm.tot, len.sh, rt.sh.bm,
+         bm.sh, bm.rt, sla, sla.2, c.n.ratio, toothpicks)
+
 # simple visualization plots to see the range of variation
-ggcorr(species.size.5)
+ggcorr(species.size.6)
 # root bm, shoot bm, and total bm are strongly correlated, 
 # should probably just use total
-# sla and sla2 are strongly correlated, that's good
 
-species.size.6 <- species.size.5 %>% 
-  select(species, bm.tot, len.sh, rt.sh.bm, sla, toothpicks)
-ggpairs(species.size.6, columns = c('bm.tot', 'len.sh', 'rt.sh.bm', 'sla'))
-# shoot length is positively correlated with total bm and root:shoot bm
-# SLA is also correlated with shoot length and root:shoot bm
+# double-checking sla vs sla2, yes they are tightly correlated
+ggplot(species.size.6, aes(x=sla, y = sla.2)) + 
+  geom_text(aes(label=species, color=toothpicks),hjust=0, vjust=0) +
+  scale_color_manual(values=c('black','red'))
+
+# further filtering based on correlation plots
+species.size.7 <- species.size.6 %>% 
+  select(species, bm.tot, len.sh, rt.sh.bm, sla.2, c.n.ratio, toothpicks)
+ggpairs(species.size.7, columns = c('bm.tot', 'len.sh', 'rt.sh.bm', 'sla.2','c.n.ratio'))
+# total biomass is pos.correlated with shoot length, root:shoot, and neg. with SLA
+# shoot length is also pos. correlated with C:N
+# the only strong (R2 > .5) corrleation is between total biomass and shoot length
 
 ## seeing where our toothpick species fall on these axes
-ggplot(species.size.6, aes(x=bm.tot, y = rt.sh.bm)) + 
+ggplot(species.size.7, aes(x=bm.tot, y = rt.sh.bm)) + 
   geom_text(aes(label=species, color=toothpicks),hjust=0, vjust=0) +
-  scale_color_manual(values=c('black','red'))
+  scale_color_manual(values=c('black','red')) +
+  geom_smooth(method = 'lm', se = FALSE)
 
-ggplot(species.size.6, aes(x=bm.tot, y = len.sh)) + 
+ggplot(species.size.7, aes(x=bm.tot, y = len.sh)) + 
   geom_text(aes(label=species, color=toothpicks),hjust=0, vjust=0) +
-  scale_color_manual(values=c('black','red'))
+  scale_color_manual(values=c('black','red')) +
+  geom_smooth(method = 'lm', se = FALSE)
 
-# double-checking sla vs sla2
-ggplot(species.size.5, aes(x=sla, y = sla.2)) + 
+ggplot(species.size.7, aes(x=sla.2, y = c.n.ratio)) + 
   geom_text(aes(label=species, color=toothpicks),hjust=0, vjust=0) +
-  scale_color_manual(values=c('black','red'))
+  scale_color_manual(values=c('black','red')) +
+  geom_smooth(method = 'lm', se = FALSE)
 
 # surprisingly positive correlation between fert and shade responses
 # I'm not convinced on this, I think it's possible it's an artifact of 
 # how the data were collected (counting germination days etc)
 ggplot(species.size.3, aes(x=fert.diff.bm, y = shade.diff.bm)) + 
   geom_text(aes(label=species, color=toothpicks),hjust=0, vjust=0) +
-  scale_color_manual(values=c('black','red'))
+  scale_color_manual(values=c('black','red')) +
+  geom_smooth(method = 'lm', se = FALSE)
 
 # somewhat different pattern for the heights 
 # some respond to shade by growing taller--this is its own trait
 ggplot(species.size.3, aes(x=fert.diff.len, y = shade.diff.len)) + 
   geom_text(aes(label=species, color=toothpicks),hjust=0, vjust=0) +
-  scale_color_manual(values=c('black','red'))
+  scale_color_manual(values=c('black','red')) +
+  geom_smooth(method = 'lm', se = FALSE)
