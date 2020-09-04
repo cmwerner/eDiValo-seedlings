@@ -1,0 +1,78 @@
+---
+title: "edivalo-seedlings-trait-demo"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+library(tidyverse) # data structuring
+library(ggplot2) # plotting
+library(ggthemes) # plotting
+library(GGally) # plotting
+
+source('edivalo-seedlings-traits.R', local=TRUE) # script with the trait data
+theme_cw <- function () { 
+  theme_bw(base_size=12) %+replace% 
+    theme(
+      panel.background = element_blank(), 
+      plot.background = element_blank(), 
+      axis.ticks = element_line(colour = "grey70", size = rel(0.5)),
+      panel.grid.minor = element_blank(), 
+      panel.grid.major.x = element_blank(),
+      legend.background = element_blank(), 
+      legend.key = element_blank(),
+      strip.background = element_blank(), 
+      strip.text=element_text(size=12),
+      axis.text=element_text(size=12),
+      complete = TRUE
+    )
+}
+
+```
+
+## Correlations between trait variables
+Simple correlation plot: 1. root bm, shoot bm, and total bm are strongly correlated, will probably use the total bm 2. sla (first 3 leaves) and sla.2 (first 2 leaves only) are strongly correlated, that's good, we can just use the first 2 leaves. 
+```{r corr-plot1, echo=FALSE, warning=FALSE, message=FALSE}
+ggcorr(species.size.6)
+```
+
+More detailed correlation plot with our smaller set of variables
+```{r corr-plot2, echo=FALSE, warning=FALSE, message=FALSE}
+ggpairs(species.size.7, columns = c('bm.tot', 'len.sh', 'rt.sh.bm', 'sla.2','c.n.ratio'))
+
+```
+
+## Trait distributions
+Seeing what the distribution of trait relationships are, and where our toothpick-marked seedlings fall in this space (these species are labled in red)
+
+Total biomass and root-shoot biomass ratio
+```{r corr-plot3, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(species.size.7, aes(x=bm.tot, y = rt.sh.bm)) + 
+  geom_text(aes(label=species, color=toothpicks),hjust=0, vjust=0) +
+  scale_color_manual(values=c('black','red')) +
+  geom_smooth(method = 'lm', se = FALSE, color = 'grey50') + 
+  theme_cw() +
+  theme(legend.position = 'none')
+```
+
+
+SLA and C:N
+```{r corr-plot4, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(species.size.7, aes(x=sla.2, y = c.n.ratio)) + 
+  geom_text(aes(label=species, color=toothpicks),hjust=0, vjust=0) +
+  scale_color_manual(values=c('black','red')) +
+  geom_smooth(method = 'lm', se = FALSE, color = 'grey50') + 
+  theme_cw() +
+  theme(legend.position = 'none')
+```
+
+Total biomass and shoot length--these are pretty strongly correlated (R^2 of almost 0.7), I think it will probably be best to not include shoot length in the analyses
+```{r corr-plot5, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(species.size.7, aes(x=bm.tot, y = len.sh)) + 
+  geom_text(aes(label=species, color=toothpicks),hjust=0, vjust=0) +
+  scale_color_manual(values=c('black','red')) +
+  geom_smooth(method = 'lm', se = FALSE, color = 'grey50') + 
+  theme_cw() +
+  theme(legend.position = 'none')
+```

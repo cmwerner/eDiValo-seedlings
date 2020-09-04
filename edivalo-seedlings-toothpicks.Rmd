@@ -101,43 +101,6 @@ ggplot(mark.plot, aes(x=nutrient, y=total.mean,
 
 ```
 
-Now zooming in on just the most common species to see how they may be responding to treatments.
-
-### April abundance of Plantago
-```{r april-plantago, echo=FALSE, warning=FALSE, message=FALSE}
-ggplot(filter(plantago, month==4),
-       aes(x=nutrient, y=total.mean, 
-                     ymin=total.mean-total.se, ymax=total.mean+total.se,
-                     color=light)) +
-  facet_grid(.~grazing) +
-  geom_point(size=4, position=position_dodge(0.5)) +
-  geom_errorbar(width=0.2, position=position_dodge(0.5)) +
-  ylab('Plantago seedling count') +
-  xlab('') +
-  theme_cw() +
-  theme(text = element_text(size=12)) +
-  scale_color_manual(values=c('black','orange'), name='') +
-  theme(legend.position = c(0.9, 0.9), legend.text=element_text(size=10))
-```
-
-
-### April abundance of Dianthus
-
-```{r april-dianthus, echo=FALSE, warning=FALSE, message=FALSE}
-ggplot(filter(dianthus, month==4),
-       aes(x=nutrient, y=total.mean, 
-                     ymin=total.mean-total.se, ymax=total.mean+total.se,
-                     color=light)) +
-  facet_grid(.~grazing) +
-  geom_point(size=4, position=position_dodge(0.5)) +
-  geom_errorbar(width=0.2, position=position_dodge(0.5)) +
-  ylab('Dianthus seedling count') +
-  xlab('') +
-  theme_cw() +
-  theme(text = element_text(size=12)) +
-  scale_color_manual(values=c('black','orange'), name='') +
-  theme(legend.position = c(0.1, 0.9), legend.text=element_text(size=10))
-```
 
 ## Emergence
 Data re-structuring to look at emergence rather than abundance. We also want to add in zeros for the ones that are missing for the analyses, we're using a complete plot list for this. It is multiplied to have all the species in each plot. 
@@ -214,12 +177,19 @@ ggplot(emergence.plot,
   theme(legend.position = 'right', legend.text=element_text(size=10))
 
 ```
+
+## Next steps
+Analyzing emergence for individual species
+Analyzing emergence for species combined into a single model?
+Structuring and analyzing survival
+Incorporating trait data
+
 ### Emergence Analysis
-Starting off with a separate model for each species. We may only be able to get useful models for Plantago and Dianthus, but it's possible that models for Galium and/or Medicago will also converge. We can also explore combining these into models that include species id as an effect (probably having it interact with ).
+Separate model for each species. We may only be able to get useful models for Plantago and Dianthus, but it's possible that models for Galium and/or Medicago will also converge. We can also explore combining these into models that include species id as an effect (probably having it interact with ).
 
 Probably going to want a negative binomial distribution and/or a zero-inflated model for these emergence counts, similar to the models of the naturally regenerating seedlings. Can approach the model structure and model selection in the same way to keep the methods consistent. 
 
-```{r emergence-analysis}
+```{r emergence-analysis, echo=FALSE, warning=FALSE, message=FALSE}
 
 emerg.pla <- emergence.full %>% filter(species == 'plantago lan')
 emerg.dia <- emergence.full %>% filter(species == 'dianthus car')
@@ -228,11 +198,5 @@ emerg.dia <- emergence.full %>% filter(species == 'dianthus car')
 
 
 ```
-
-## Next steps
-Analyzing emergence for individual species
-Analyzing emergence for species combined into a single model?
-Structuring and analyzing survival
-Incorporating trait data
 
 
