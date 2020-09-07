@@ -19,6 +19,7 @@ library(lmerTest) # p-values on basic models
 library(gtsummary) # pretty tables
 library(glmmTMB) # glmm with zero-inflation
 library(bbmle) # model comparison tables
+library(broom.mixed)
 source('edivalo-seedlings-traits.R', local=TRUE) # script with the trait data
 
 # theme for plotting
@@ -126,6 +127,7 @@ nat.seedlings.plot.sum.2 <- filter(nat.seedlings.plot.sum,
                                    month %in% c('2019_10','2020_03','2020_05'))
 ```
 
+For summary richness and cout analyses, need to make sure block and plotid are being treated as factors
 ## Total seedlings count
 Summary for plotting total and richness (code not printed)
 ```{r summary-plot, echo=FALSE, warning=FALSE, message=FALSE}
@@ -347,6 +349,8 @@ nat.seedlings.max <- nat.seedlings.long %>%
 nat.seedlings.traits <- nat.seedlings.max %>% 
   left_join(species.size.7, by = 'species') %>% 
   filter(!is.na(bm.tot))
+nat.seedlings.traits$block <- as.factor(nat.seedlings.traits$block)
+nat.seedlings.traits$plotid <- as.factor(nat.seedlings.traits$plotid)
 
 # summary by species for ggplot
 nat.seedlings.traits.sum <- nat.seedlings.traits %>%
@@ -362,18 +366,6 @@ nat.seedlings.traits.sum <- nat.seedlings.traits %>%
     # traits should be the same as their values, double-check
   )
 
-# further summary not including fertilization
-nat.seedlings.traits.sum.2 <- nat.seedlings.traits %>%
-  group_by(grazing, light, species) %>%
-  dplyr::summarise(
-    abundance = mean(count.max),
-    abundance.se = sd(count.max)/sqrt(20),
-    bm.tot = mean(bm.tot), 
-    rt.sh.bm = mean(rt.sh.bm),
-    len.sh = mean(len.sh),
-    sla = mean(sla.2),
-    c.n = mean(c.n.ratio)
-  )
 
 ```
 
@@ -437,49 +429,6 @@ full -- all 2-way, 3-way, and 4-way interactions
 specific -- 3-way interactions for grazing x light x trait and grazing x light x nutrients, which are the ones that are significant in some of the models. 
 
 Results below each model show the summary for the specific model, an AIC table comparing these options, and the under- or over-dispersion coefficient. 
-
-### Trying combining trait models
-```{r traits-multiple}
-
-m.all.traits  <- glmmTMB(count.max ~ grazing * nutrient + light +
-                           light*grazing*nutrient + 
-                           light*grazing*bm.tot + 
-                           light*grazing*sla.2 + 
-                           light*grazing*c.n.ratio + 
-                           (1|species) + (1|block:plotid), 
-                         nat.seedlings.traits, family = nbinom2)
-
-m.biomass <- glmmTMB(count.max ~ grazing * nutrient + light + 
-                       light*grazing*nutrient + 
-                       light*grazing*bm.tot +
-                       (1|species) + (1|block:plotid), 
-                     nat.seedlings.traits, family = nbinom2)
-
-m.sla <- glmmTMB(count.max ~ grazing * nutrient + light + 
-                   light*grazing*nutrient + 
-                   light*grazing*sla.2 +
-                   (1|species) + (1|block:plotid), 
-                 nat.seedlings.traits, family = nbinom2)
-
-
-m.cn <- glmmTMB(count.max ~ grazing * nutrient + light + 
-                  light*grazing*nutrient + 
-                  light*grazing*c.n.ratio +
-                  (1|species) + (1|block:plotid), 
-                nat.seedlings.traits, family = nbinom2)
-
-m.sla.cn <- glmmTMB(count.max ~ grazing * nutrient + light + 
-                      light*grazing*nutrient + 
-                      light*grazing*c.n.ratio +
-                      light*grazing*sla.2 +
-                      (1|species) + (1|block:plotid), 
-                    nat.seedlings.traits, family = nbinom2)
-
-AICtab(m.biomass, m.cn, m.sla, m.all.traits, m.sla.cn)
-summary(m.all.traits)
-
-```
-
 
 ### Total biomass 
 Preliminary plot of raw data
@@ -586,7 +535,7 @@ m.sla.specific <- glmmTMB(count.max ~ grazing * nutrient + light + sla.2 +
                             light*grazing*sla.2 + grazing*nutrient*light +
                         (1|species) + (1|block:plotid), 
                  nat.seedlings.traits, family = nbinom2)
-summary(m.sla.specific)
+#summary(m.sla.specific)
 
 AICtab(m.sla.0, m.sla.1, m.sla.2, m.sla.full, m.sla.specific)
 
@@ -594,7 +543,53 @@ E2 <- resid(m.sla.specific, type = "pearson")
 N  <- nrow(nat.seedlings.traits)
 p  <- length(coef(m.sla.specific)) 
 sum(E2^2) / (N - p) # somewhat overdispersed
+
+# simplified summary of model coefficients
+tbl_regression(m.sla.specific, 
+               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
+                                   'grazing:light','nutrient:light',
+                                   'grazing:nutrient:light',
+                                   'light:sla.2','grazing:sla.2',
+                                   'grazing:light:sla.2'))
+
 ```
+
+Counterfactual plots (not including nutrients, since they don't interact with the traits)
+```{r trait-SLA-plots2}
+
+
+# currently without nitrogen
+# can also try adding it back in and doing the prediction more clearly
+m.sla.simple <- glmmTMB(count.max ~ light*grazing*sla.2 + 
+                          (1|species) + (1|block:plotid), 
+                 nat.seedlings.traits, family = nbinom2)
+
+
+new.data <- nat.seedlings.traits
+new.data$species <- "new"
+new.data$block <- "new"
+new.data$plotid <- "new"
+
+m.sla.fit <- predict(m.sla.specific, new.data, allow.new.levels = TRUE, se.fit = TRUE)
+new.data$sla.fit <- m.sla.fit$fit
+new.data$sla.fit.se <- m.sla.fit$se.fit
+
+ggplot(new.data, 
+                  aes(x = sla.2, y = sla.fit, 
+                      ymin = sla.fit - sla.fit.se, ymax = sla.fit + sla.fit.se,
+                      fill = light)) + 
+  facet_grid(nutrient~grazing) +
+  geom_line(size = 1.2, aes(color = light)) + 
+  geom_ribbon(alpha = 0.3) +
+  theme_cw() + 
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  scale_fill_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'bottom', legend.text=element_text(size=12))
+
+
+```
+
 
 
 ### C:N 
@@ -715,7 +710,7 @@ p  <- length(coef(m.rt.sh.bm.specific))
 sum(E2^2) / (N - p) # somewhat overdispersed
 ```
 
-### Shoot length plot
+### Shoot length
 Preliminary plot of raw data
 ```{r trait-length-plot, echo=FALSE, warning=FALSE, message=FALSE}
 
@@ -770,3 +765,45 @@ p  <- length(coef(m.len.sh.specific))
 sum(E2^2) / (N - p) # somewhat overdispersed
 ```
 
+### Trying combining trait models
+I tried combining traits into a single model. The models do fine and the results are basically the same, so I think it's fine to stick with separate models for now (because they're simpler and more convenient to present results from) and keep this in case reviewers ask for it. 
+```{r traits-multiple, echo=FALSE, warning=FALSE, message=FALSE}
+
+m.all.traits  <- glmmTMB(count.max ~ grazing * nutrient + light +
+                           light*grazing*nutrient + 
+                           light*grazing*bm.tot + 
+                           light*grazing*sla.2 + 
+                           light*grazing*c.n.ratio + 
+                           (1|species) + (1|block:plotid), 
+                         nat.seedlings.traits, family = nbinom2)
+
+m.biomass <- glmmTMB(count.max ~ grazing * nutrient + light + 
+                       light*grazing*nutrient + 
+                       light*grazing*bm.tot +
+                       (1|species) + (1|block:plotid), 
+                     nat.seedlings.traits, family = nbinom2)
+
+m.sla <- glmmTMB(count.max ~ grazing * nutrient + light + 
+                   light*grazing*nutrient + 
+                   light*grazing*sla.2 +
+                   (1|species) + (1|block:plotid), 
+                 nat.seedlings.traits, family = nbinom2)
+
+
+m.cn <- glmmTMB(count.max ~ grazing * nutrient + light + 
+                  light*grazing*nutrient + 
+                  light*grazing*c.n.ratio +
+                  (1|species) + (1|block:plotid), 
+                nat.seedlings.traits, family = nbinom2)
+
+m.sla.cn <- glmmTMB(count.max ~ grazing * nutrient + light + 
+                      light*grazing*nutrient + 
+                      light*grazing*c.n.ratio +
+                      light*grazing*sla.2 +
+                      (1|species) + (1|block:plotid), 
+                    nat.seedlings.traits, family = nbinom2)
+
+AICtab(m.biomass, m.cn, m.sla, m.all.traits, m.sla.cn)
+summary(m.all.traits)
+
+```
