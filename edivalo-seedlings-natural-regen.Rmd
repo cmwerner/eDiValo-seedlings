@@ -362,6 +362,19 @@ nat.seedlings.traits.sum <- nat.seedlings.traits %>%
     # traits should be the same as their values, double-check
   )
 
+# further summary not including fertilization
+nat.seedlings.traits.sum.2 <- nat.seedlings.traits %>%
+  group_by(grazing, light, species) %>%
+  dplyr::summarise(
+    abundance = mean(count.max),
+    abundance.se = sd(count.max)/sqrt(20),
+    bm.tot = mean(bm.tot), 
+    rt.sh.bm = mean(rt.sh.bm),
+    len.sh = mean(len.sh),
+    sla = mean(sla.2),
+    c.n = mean(c.n.ratio)
+  )
+
 ```
 
 ### Species traits abundance models
