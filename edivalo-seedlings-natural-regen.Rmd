@@ -380,45 +380,50 @@ nat.seedlings.traits.sum.2 <- nat.seedlings.traits %>%
 ### Species traits abundance models
 The data is overdispersed and/or zero-inflated. We want to try to put together a model format that seems reasonable before adding in the trait data. Using the 'glmmTMB' package, which is detailed in "glmmTMB Balances Speed and Flexibility Among Packages for Zero-inflated Generalized Linear Mixed Modeling" by Brooks et al 2017, and the AICtab() function in the 'bblme' package for convenient AIC comparisons of different models. 
 
-Options for model distrubtions are: Poisson, and negative binomial, as well as zero-inflated or hurdle models. Starting with just the simple ones, negative binomial is much better than poisson and seems to do pretty well.
-
-Can try looking at the zero-inflated forms later. For the zi setup, could consider doing a random factor for species in the zero-inflation part, and then the trait in the abundance-if-present part? 
+Options for model distrubtions are: Poisson, and negative binomial, as well as zero-inflated or hurdle models. Negative binomial is better than Poisson or the zero-inflated options (code included but not run)
 
 ```{r basic-models, echo=FALSE, warning=FALSE, message=FALSE}
 
-# poisson
-m.p.basic <- glmmTMB(count.max ~ grazing + nutrient + light + (1|species) +
-                   (1|block:plotid), 
-                 nat.seedlings.max, family = poisson)
-
-m.p.full <- glmmTMB(count.max ~ grazing * nutrient * light + (1|species) +
-                   (1|block:plotid), 
-                 nat.seedlings.max, family = poisson)
-
-m.p.specific <- glmmTMB(count.max ~ grazing * nutrient + light + (1|species) +
-                   (1|block:plotid), 
-                 nat.seedlings.max, family = poisson)
-
-# negative binomial
-
-m.nb.basic <- glmmTMB(count.max ~ grazing + nutrient + light + (1|species) +
-                   (1|block:plotid), 
-                 nat.seedlings.max, family = nbinom2)
-
-m.nb.full <- glmmTMB(count.max ~ grazing * nutrient * light + (1|species) +
-                   (1|block:plotid), 
-                 nat.seedlings.max, family = nbinom2)
-
-m.nb.specific <- glmmTMB(count.max ~ grazing * nutrient + light + (1|species) +
-                   (1|block:plotid), 
-                 nat.seedlings.max, family = nbinom2)
-
-
-# zi poisson
-
-# zi neg binomial
-
-# AICtab(m.p.basic, m.p.full, m.p.specific, m.nb.basic, m.nb.full, m.nb.specific)
+# # poisson
+#  m.p.basic <- glmmTMB(count.max ~ grazing + nutrient + light + (1|species) +
+#                     (1|block:plotid), 
+#                   nat.seedlings.max, family = poisson)
+#  
+#  m.p.full <- glmmTMB(count.max ~ grazing * nutrient * light + (1|species) +
+#                     (1|block:plotid), 
+#                   nat.seedlings.max, family = poisson)
+#  
+#  m.p.specific <- glmmTMB(count.max ~ grazing * nutrient + light + (1|species) +
+#                     (1|block:plotid), 
+#                   nat.seedlings.max, family = poisson)
+# 
+# # negative binomial
+# 
+#  m.nb.basic <- glmmTMB(count.max ~ grazing + nutrient + light + (1|species) +
+#                     (1|block:plotid), 
+#                   nat.seedlings.max, family = nbinom2)
+#  
+#  m.nb.full <- glmmTMB(count.max ~ grazing * nutrient * light + (1|species) +
+#                     (1|block:plotid), 
+#                   nat.seedlings.max, family = nbinom2)
+# 
+# m.nb.specific <- glmmTMB(count.max ~ grazing * nutrient + light + (1|species) +
+#                    (1|block:plotid), 
+#                  nat.seedlings.max, family = nbinom2)
+# 
+# # zi poisson
+# m.pois.zi.specific <- glmmTMB(count.max ~ grazing * nutrient + light +
+#                    (1|block:plotid), zi = ~ grazing + (1|species), 
+#                  nat.seedlings.max, family = poisson)
+# 
+# # zi neg binomial
+# m.nb.zi.specific <- glmmTMB(count.max ~ grazing * nutrient + light +
+#                    (1|block:plotid), zi = ~ grazing + (1|species), 
+#                  nat.seedlings.max, family = nbinom2)
+# summary(m.nb.zi.specific)
+# 
+# 
+# AICtab(m.nb.specific, m.pois.zi.specific, m.nb.zi.specific)
 
 ```
 
@@ -432,6 +437,48 @@ full -- all 2-way, 3-way, and 4-way interactions
 specific -- 3-way interactions for grazing x light x trait and grazing x light x nutrients, which are the ones that are significant in some of the models. 
 
 Results below each model show the summary for the specific model, an AIC table comparing these options, and the under- or over-dispersion coefficient. 
+
+### Trying combining trait models
+```{r traits-multiple}
+
+m.all.traits  <- glmmTMB(count.max ~ grazing * nutrient + light +
+                           light*grazing*nutrient + 
+                           light*grazing*bm.tot + 
+                           light*grazing*sla.2 + 
+                           light*grazing*c.n.ratio + 
+                           (1|species) + (1|block:plotid), 
+                         nat.seedlings.traits, family = nbinom2)
+
+m.biomass <- glmmTMB(count.max ~ grazing * nutrient + light + 
+                       light*grazing*nutrient + 
+                       light*grazing*bm.tot +
+                       (1|species) + (1|block:plotid), 
+                     nat.seedlings.traits, family = nbinom2)
+
+m.sla <- glmmTMB(count.max ~ grazing * nutrient + light + 
+                   light*grazing*nutrient + 
+                   light*grazing*sla.2 +
+                   (1|species) + (1|block:plotid), 
+                 nat.seedlings.traits, family = nbinom2)
+
+
+m.cn <- glmmTMB(count.max ~ grazing * nutrient + light + 
+                  light*grazing*nutrient + 
+                  light*grazing*c.n.ratio +
+                  (1|species) + (1|block:plotid), 
+                nat.seedlings.traits, family = nbinom2)
+
+m.sla.cn <- glmmTMB(count.max ~ grazing * nutrient + light + 
+                      light*grazing*nutrient + 
+                      light*grazing*c.n.ratio +
+                      light*grazing*sla.2 +
+                      (1|species) + (1|block:plotid), 
+                    nat.seedlings.traits, family = nbinom2)
+
+AICtab(m.biomass, m.cn, m.sla, m.all.traits, m.sla.cn)
+summary(m.all.traits)
+
+```
 
 
 ### Total biomass 
