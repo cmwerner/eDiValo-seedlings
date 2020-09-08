@@ -32,15 +32,18 @@ theme_cw <- function () {
 }
 
 # Chhaya's path
-mark.seedlings <- read.csv("data/toothpick_seedling_data_2020_all.csv",
-                           stringsAsFactors = FALSE)
-plot.list <- read.csv("data/plot_list.csv", stringsAsFactors = FALSE)
+#mark.seedlings <- read.csv("data/toothpick_seedling_data_2020_all.csv",
+ #                          stringsAsFactors = FALSE)
+#plot.list <- read.csv("data/plot_list.csv", stringsAsFactors = FALSE)
 
 # Mia's path
-#mark.seedlings<-read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/toothpick_seedling_data_2020_all.csv", stringsAsFactors = FALSE)
+mark.seedlings<-read.csv("C:/Users/mj65tivo/Documents/GitHub/edivalo-seedlings/data/toothpick_seedling_data_2020_all.csv", stringsAsFactors = FALSE)
 #View(mark.seedlings)
 # For Mia: change first column name to month
-#colnames(mark.seedlings)[1]<-"month"
+colnames(mark.seedlings)[1]<-"month"
+
+plot.list <- read.csv("data/plot_list.csv", stringsAsFactors = FALSE)
+
 
 # adding separate columns for exclosure, light, and fertilization treatments
 mark.seedlings$grazing <- 'sheep'
@@ -80,7 +83,7 @@ daucus <- filter(mark.plot, species=="daucus car")
 medicago <- filter(mark.plot, species=="medicago fal.")
 dianthus <- filter(mark.plot, species=="dianthus car")
 galium <- filter(mark.plot, species=="galium alb")
-crebis <- filter(mark.plot, species=="crebis bie")
+crepis <- filter(mark.plot, species=="crebis bie")
 
 ## everything
 ggplot(mark.plot, aes(x=nutrient, y=total.mean, 
@@ -199,4 +202,42 @@ emerg.dia <- emergence.full %>% filter(species == 'dianthus car')
 
 ```
 
+```{r survival analysis, echo= F, warning = F, message = F}
+# setting up the full data frame with one line for every toothpick at each sampling point
+species.list <- unique(mark.plot$species) # should be 6
+toothpick.list <-unique(mark.seedlings$id..1.6.) # should be 6
+month.list<-unique(mark.seedlings$month) # should be 6
+plot.list<-unique(plot.list$plot)# should be 80
+block.list <-unique(plot.list$block)
 
+plot.rep1 <- rep(plot.list, each=36, times = length(month.list))
+species.rep1 <- rep(species.list, each=length(toothpick.list), times = 480)
+toothpick.rep1 <- rep(toothpick.list, times = 2880)
+month.rep1 <- rep(month.list, each= length(plot.list), times = 36)
+
+surv.full <- data.frame(month = month.rep1, plot = plot.rep1, species = species.rep1, id..1.6. = toothpick.rep1) %>%
+  left_join(mark.seedlings, by = c('plot', 'species','id..1.6.', 'month'))
+
+#  add column for sampling time, doy and the beginning of the interval in which a seedling could have diesd to 
+# data set
+surv.full$sampling = ifelse(surv.full$month == "2", "t1",
+                          ifelse(surv.full$month == "3", "t2",
+                                 ifelse(surv.full$month == "4", "t3",
+                                        ifelse(surv.full$month == "5", "t4",
+                                               ifelse(surv.full$month == "6", "t5", "t6")))))
+
+surv.full$doy = ifelse(surv.full$month == "2", "50",
+                          ifelse(surv.full$month == "3", "77",
+                                 ifelse(surv.full$month == "4", "107",
+                                        ifelse(surv.full$month == "5", "147",
+                                               ifelse(surv.full$month == "6", "171", "198")))))
+
+surv.full$int_start = ifelse(surv.full$doy == "50", "0",
+                                   ifelse(surv.full$month == "77", "50",
+                                      ifelse(surv.full$month == "107", "77",
+                                        ifelse(surv.full$month == "147", "107",
+                                              ifelse(surv.full$month == "171","147", "171")))))
+
+
+
+```
