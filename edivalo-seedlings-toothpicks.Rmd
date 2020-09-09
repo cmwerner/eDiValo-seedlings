@@ -12,6 +12,9 @@ Loads libraries, sets up custom theme for ggplot, and reads in data (code not pr
 library(tidyverse)
 library(ggplot2)
 library(ggthemes)
+library(plyr)
+library(coxme)
+library(car)
 
 # theme for plotting
 theme_cw <- function () { 
@@ -210,15 +213,24 @@ month.list<-unique(mark.seedlings$month) # should be 6
 plot.list<-unique(plot.list$plot)# should be 80
 block.list <-unique(plot.list$block)
 
+
+month.rep1 <- rep(month.list, each= 2880, times = 1)
+block.rep1 <- rep(block.list, each= 288, times= 6)
 plot.rep1 <- rep(plot.list, each=36, times = length(month.list))
 species.rep1 <- rep(species.list, each=length(toothpick.list), times = 480)
 toothpick.rep1 <- rep(toothpick.list, times = 2880)
-month.rep1 <- rep(month.list, each= length(plot.list), times = 36)
 
-surv.full <- data.frame(month = month.rep1, plot = plot.rep1, species = species.rep1, id..1.6. = toothpick.rep1) %>%
-  left_join(mark.seedlings, by = c('plot', 'species','id..1.6.', 'month'))
+# for each toothpick and sampling time (month) how many seedlings are there (alive)
+mark.alive <- mark.seedlings %>%
+  group_by(month,block, plot, grazing, nutrient, light, species, id..1.6.) %>%
+  dplyr::summarize(
+    alive = number)
 
-#  add column for sampling time, doy and the beginning of the interval in which a seedling could have diesd to 
+# create full data frame to also include the toothpicks were no seedlings were alive/emerged
+surv.full <-  data.frame(month = month.rep1, block = block.rep1, plot = plot.rep1, species = species.rep1, id..1.6. = toothpick.rep1) %>%
+  left_join(mark.alive, by = c('plot', 'species','month', 'id..1.6.'))
+
+#  add column for sampling time, doy and the beginning of the interval in which a seedling could have died to 
 # data set
 surv.full$sampling = ifelse(surv.full$month == "2", "t1",
                           ifelse(surv.full$month == "3", "t2",
@@ -239,5 +251,36 @@ surv.full$int_start = ifelse(surv.full$doy == "50", "0",
                                               ifelse(surv.full$month == "171","147", "171")))))
 
 
+surv.full$alive[is.na(surv.full$alive)] <- 0
+surv.full$alive = as.numeric(surv.full$alive)
 
+surv.full$grazing <- 'sheep'
+surv.full$grazing[grep('E', surv.full$plot)] <- 'exclosure'
+surv.full$nutrient <- 'unfertilized'
+surv.full$nutrient[grep('F', surv.full$plot)] <- 'fertilized'
+surv.full$light <- 'control'
+surv.full$light[grep('L', surv.full$plot)] <- 'lamps'
+
+# remove those seedlings that are always zero through month 2,3,4,6,7
+# THIS STILL NEEDS TO BE DONE
+surv.full1 <- surv.full %>% 
+  filter(!(month =="2" & alive == "0"))
+
+# add row with with event (seedling dead = 1, still alive = 0)
+surv.full1$event <- ifelse(surv.full1$alive == "0", 1, 0)
+  
 ```
+# Analyses
+```{r survival models, echo = F, warning = F, message = F}
+
+# We might need to add another level of hierachy in the random term?
+
+# Dianthus
+dian.mod<-coxme(Surv(doy,event)~grazing*nutrient*light +(1|block/plot), data = subset(surv.full1, species == "dianthus car")
+summary(dian.mod)
+Anova(dian.mod, type = "II", test.statistic = "Chisq")
+
+# Plantago
+plan.mod<-coxme(Surv(doy,event)~grazing*nutrient*light +(1|block/plot), data = subset(surv.full1, species == "plantago lan")
+summary(plan.mod)
+Anova(plan.mod, type = "II", test.statistic = "Chisq")
