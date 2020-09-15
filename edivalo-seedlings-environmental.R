@@ -2,6 +2,31 @@
 # available is light quantity, light quality, vole disturbance, litter depth, soil moisture
 # may get air temp and rh later
 
+library(tidyverse) # data structuring
+library(ggplot2) # plotting
+library(ggthemes) # plotting
+library(lme4) # basic models
+library(lmerTest) # p-values on basic models
+#library(broom.mixed)
+
+# theme for plotting
+theme_cw <- function () { 
+  theme_bw(base_size=12) %+replace% 
+    theme(
+      panel.background = element_blank(), 
+      plot.background = element_blank(), 
+      axis.ticks = element_line(colour = "grey70", size = rel(0.5)),
+      panel.grid.minor = element_blank(), 
+      panel.grid.major.x = element_blank(),
+      legend.background = element_blank(), 
+      legend.key = element_blank(),
+      strip.background = element_blank(), 
+      strip.text=element_text(size=12),
+      axis.text=element_text(size=12),
+      complete = TRUE
+    )
+}
+
 plot.list <- read.csv("data/plot_list.csv", stringsAsFactors = FALSE)
 # combine plot numbers and treatments together in plot list df
 plot.list$plot <- paste(plot.list$plotid, plot.list$treat, sep="")
@@ -100,4 +125,34 @@ vole.plot <- ggplot(plot.vole.summary,
   scale_color_manual(values=c('black','orange'), name='') +
   theme(legend.position = 'bottom', legend.text=element_text(size=12))
 ggsave(filename = 'vole_dist.pdf', width=6, height=5, units='in')
+
+### Litter depth--------
+litter <- read.csv("data/litter_depth_20.csv", stringsAsFactors = FALSE)[c(1, 2, 7)]
+
+plot.litter <- plot.list %>% 
+  left_join(litter, by = c('block','plotid' = 'plot'))
+
+plot.litter.summary <- plot.litter %>% 
+  group_by(grazing, nutrient, light) %>%
+  dplyr::summarise(
+    n = length(depth_avg),
+    litter.mean = mean(depth_avg),
+    litter.se = sd(depth_avg)/sqrt(n)
+  )
+
+litter.plot <- ggplot(plot.litter.summary, 
+                    aes(x=nutrient, y=litter.mean, 
+                        ymin=litter.mean-litter.se,
+                        ymax=litter.mean+litter.se,
+                        color=light)) +
+  facet_grid(.~grazing) +
+  geom_point(size=2, position=position_dodge(0.2)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.2)) +
+  ylab('Litter Depth') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'bottom', legend.text=element_text(size=12))
+ggsave(filename = 'litter_depth.pdf', width=6, height=5, units='in')
 
