@@ -95,6 +95,68 @@ unlighted.plot <- ggplot(plot.light.summary,
 ggsave(filename = 'light_quant_2.pdf', width=6, height=5, units='in')
 
 
+### light quality----
+## Note that this data was collected in late July
+light.qual <- read.csv("data/light_quality_20.csv", stringsAsFactors = FALSE)[,c(2:6, 8)]
+
+plot.light.2 <- light.qual %>% 
+  pivot_wider(names_from = 'lighted', values_from = 'rfr') %>%
+  rename(light_qual_lighted = Y, light_qual_unlighted = N)
+
+# making the unlighted values for the no lamp plots the same as the lighted ones
+unlighted.2 <- which(is.na(plot.light.2$light_qual_lighted))
+plot.light.2$light_qual_lighted[unlighted.2] <- plot.light.2$light_qual_unlighted[unlighted.2]
+
+plot.light <- left_join(plot.light, plot.light.2[,c(1, 2, 5, 6)],
+                        by = c('block','plotid' = 'plot'))
+
+
+plot.light.summary.2 <- plot.light %>% 
+  group_by(grazing, nutrient, light) %>%
+  dplyr::summarise(
+    n = length(light_qual_lighted),
+    qual.mean = mean(light_qual_lighted),
+    qual.se = sd(light_qual_lighted)/sqrt(n),
+    qual.unlit.mean = mean(light_qual_unlighted),
+    qual.unlit.se = sd(light_qual_unlighted)/sqrt(n)
+  )
+
+lighted.plot <- ggplot(plot.light.summary.2, 
+                       aes(x=nutrient, y=qual.mean, 
+                           ymin=qual.mean-qual.se,
+                           ymax=qual.mean+qual.se,
+                           color=light)) +
+  facet_grid(.~grazing) +
+  geom_point(size=2, position=position_dodge(0.2)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.2)) +
+  ylab('Light red:far red') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'bottom', legend.text=element_text(size=12))
+ggsave(filename = 'light_qual_1.pdf', width=6, height=5, units='in')
+
+
+
+unlighted.plot <- ggplot(plot.light.summary.2, 
+                         aes(x = nutrient, y = qual.unlit.mean, 
+                             ymin = qual.unlit.mean - qual.unlit.se,
+                             ymax = qual.unlit.mean + qual.unlit.se,
+                             color = light)) +
+  facet_grid(.~grazing) +
+  geom_point(size=2, position=position_dodge(0.2)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.2)) +
+  ylab('Light red:far red (unlit)') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'bottom', legend.text=element_text(size=12))
+
+ggsave(filename = 'light_qual_2.pdf', width=6, height=5, units='in')
+
+
 ### vole disturbance--------
 vole <- read.csv("data/vole_disturb.csv", stringsAsFactors = FALSE)[,c(3, 5, 12:16)]
 # also reads in bare ground and litter cover, litter depth is in another file
