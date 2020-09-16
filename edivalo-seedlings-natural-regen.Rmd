@@ -339,7 +339,7 @@ For the trait analyses we will look at the data sliced a slightly different way-
 
 # max across time points (seems to be working, still want to triple-check it)
 nat.seedlings.max <- nat.seedlings.long %>%
-  group_by(plotid, treat, block, grazing, nutrient, light, species) %>%
+  group_by(plotid, treat, block, grazing, nutrient, light, species, climate) %>%
   dplyr::summarise(
     count.max = max(count)
   )
@@ -510,7 +510,7 @@ sum(E2^2) / (N - p) # somewhat overdispersed
 ```
 
 Counterfactual plots (not including nutrients, since they don't interact with the traits). Using re.form = NA to specific population-level predictions (setting all random effects to zero)
-```{r trait-biomass-plots2}
+```{r trait-biomass-plots2, echo=FALSE, warning=FALSE, message=FALSE}
 
 
 # currently without nitrogen
@@ -539,7 +539,7 @@ ggplot(NULL) +
   theme(legend.position = 'bottom', legend.text=element_text(size=12)) + 
   ylab('Predicted abundance') + 
   xlab('Biomass')
-ggsave('biomass-model.pdf', width = 6, height = 4, units = 'in')
+#ggsave('biomass-model.pdf', width = 6, height = 4, units = 'in')
 
 
 ```
@@ -611,7 +611,7 @@ tbl_regression(m.sla.specific,
 ```
 
 Counterfactual plots (not including nutrients, since they don't interact with the traits). Using re.form = NA to specific population-level predictions (setting all random effects to zero)
-```{r trait-SLA-plots2}
+```{r trait-SLA-plots2, echo=FALSE, warning=FALSE, message=FALSE}
 
 
 # currently without nitrogen
@@ -632,7 +632,7 @@ ggplot(NULL) +
               aes(x = sla.2, y = sla.fit, 
                   ymin = sla.fit - sla.fit.se, ymax = sla.fit + sla.fit.se,
                   fill = light)) +
-  geom_point(data = nat.seedlings.traits.sum.2, aes(x = sla, y = abundance, color = light)) + 
+#  geom_point(data = nat.seedlings.traits.sum.2, aes(x = sla, y = abundance, color = light)) + 
   theme_cw() + 
   theme(text = element_text(size=12)) +
   scale_color_manual(values=c('black','orange'), name='') +
@@ -640,7 +640,7 @@ ggplot(NULL) +
   theme(legend.position = 'bottom', legend.text=element_text(size=12)) + 
   ylab('Predicted abundance') + 
   xlab('SLA')
-ggsave('sla-model-data.pdf', width = 6, height = 4, units = 'in')
+#ggsave('sla-model-data.pdf', width = 6, height = 4, units = 'in')
 
 
 ```
@@ -711,7 +711,7 @@ sum(E2^2) / (N - p) # somewhat overdispersed
 ```
 
 Counterfactual plots
-```{r trait-CN-plots2}
+```{r trait-CN-plots2, echo=FALSE, warning=FALSE, message=FALSE}
 
 cn.data <- new.data[complete.cases(new.data),] # because we're missing secvar
 # currently without nitrogen
@@ -740,7 +740,7 @@ ggplot(NULL) +
   theme(legend.position = 'bottom', legend.text=element_text(size=12)) + 
   ylab('Predicted abundance') + 
   xlab('C:N')
-ggsave('cn-model.pdf', width = 6, height = 4, units = 'in')
+#ggsave('cn-model.pdf', width = 6, height = 4, units = 'in')
 
 # also looking at it without grazing since for C:N that has no interaction
 m.cn.simple.2 <- glmmTMB(count.max ~ light*c.n.ratio + 
@@ -767,7 +767,7 @@ ggplot(NULL) +
   theme(legend.position = 'bottom', legend.text=element_text(size=12)) + 
   ylab('Predicted abundance') + 
   xlab('C:N')
-ggsave('cn-model-2.pdf', width = 4, height = 4, units = 'in')
+#ggsave('cn-model-2.pdf', width = 4, height = 4, units = 'in')
 
 
 ```
