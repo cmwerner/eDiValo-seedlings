@@ -73,7 +73,7 @@ lighted.plot <- ggplot(plot.light.summary,
   theme(text = element_text(size=12)) +
   scale_color_manual(values=c('black','orange'), name='') +
   theme(legend.position = 'bottom', legend.text=element_text(size=12))
-ggsave(filename = 'light_quant_1.pdf', width=6, height=5, units='in')
+#ggsave(filename = 'light_quant_1.pdf', width=6, height=5, units='in')
 
 
 
@@ -92,7 +92,7 @@ unlighted.plot <- ggplot(plot.light.summary,
   scale_color_manual(values=c('black','orange'), name='') +
   theme(legend.position = 'bottom', legend.text=element_text(size=12))
 
-ggsave(filename = 'light_quant_2.pdf', width=6, height=5, units='in')
+#ggsave(filename = 'light_quant_2.pdf', width=6, height=5, units='in')
 
 
 ### light quality----
@@ -101,7 +101,7 @@ light.qual <- read.csv("data/light_quality_20.csv", stringsAsFactors = FALSE)[,c
 
 plot.light.2 <- light.qual %>% 
   pivot_wider(names_from = 'lighted', values_from = 'rfr') %>%
-  rename(light_qual_lighted = Y, light_qual_unlighted = N)
+  dplyr::rename(light_qual_lighted = Y, light_qual_unlighted = N)
 
 # making the unlighted values for the no lamp plots the same as the lighted ones
 unlighted.2 <- which(is.na(plot.light.2$light_qual_lighted))
@@ -135,7 +135,7 @@ lighted.plot <- ggplot(plot.light.summary.2,
   theme(text = element_text(size=12)) +
   scale_color_manual(values=c('black','orange'), name='') +
   theme(legend.position = 'bottom', legend.text=element_text(size=12))
-ggsave(filename = 'light_qual_1.pdf', width=6, height=5, units='in')
+#ggsave(filename = 'light_qual_1.pdf', width=6, height=5, units='in')
 
 
 
@@ -154,17 +154,17 @@ unlighted.plot <- ggplot(plot.light.summary.2,
   scale_color_manual(values=c('black','orange'), name='') +
   theme(legend.position = 'bottom', legend.text=element_text(size=12))
 
-ggsave(filename = 'light_qual_2.pdf', width=6, height=5, units='in')
+#ggsave(filename = 'light_qual_2.pdf', width=6, height=5, units='in')
 
 
 ### vole disturbance--------
 vole <- read.csv("data/vole_disturb.csv", stringsAsFactors = FALSE)[,c(3, 5, 12:16)]
 # also reads in bare ground and litter cover, litter depth is in another file
 
-plot.vole <- plot.list %>% 
+plot.light.vole <- plot.light %>% 
   left_join(vole, by = c('plotid' = 'subplot', 'treat' = 'treatmentcode', 'block'))
 
-plot.vole.summary <- plot.vole %>% 
+plot.vole.summary <- plot.light.vole %>% 
   group_by(grazing, nutrient, light) %>%
   dplyr::summarise(
     n = length(vole_disturbance),
@@ -186,20 +186,24 @@ vole.plot <- ggplot(plot.vole.summary,
   theme(text = element_text(size=12)) +
   scale_color_manual(values=c('black','orange'), name='') +
   theme(legend.position = 'bottom', legend.text=element_text(size=12))
-ggsave(filename = 'vole_dist.pdf', width=6, height=5, units='in')
+#ggsave(filename = 'vole_dist.pdf', width=6, height=5, units='in')
 
 ### Litter depth--------
 litter <- read.csv("data/litter_depth_20.csv", stringsAsFactors = FALSE)[c(1, 2, 7)]
 
-plot.litter <- plot.list %>% 
-  left_join(litter, by = c('block','plotid' = 'plot'))
+plot.light.vole$litter_depth <- NULL
+plot.env <- plot.light.vole %>% 
+  left_join(litter, by = c('block','plotid' = 'plot')) %>%
+  dplyr::rename(litter_depth = depth_avg) %>%
+  rename_with(., ~ tolower(gsub("_",".",.x, fixed = TRUE)))
 
-plot.litter.summary <- plot.litter %>% 
+
+plot.litter.summary <- plot.env %>% 
   group_by(grazing, nutrient, light) %>%
   dplyr::summarise(
-    n = length(depth_avg),
-    litter.mean = mean(depth_avg),
-    litter.se = sd(depth_avg)/sqrt(n)
+    n = length(litter.depth),
+    litter.mean = mean(litter.depth),
+    litter.se = sd(litter.depth)/sqrt(n)
   )
 
 litter.plot <- ggplot(plot.litter.summary, 
@@ -216,5 +220,5 @@ litter.plot <- ggplot(plot.litter.summary,
   theme(text = element_text(size=12)) +
   scale_color_manual(values=c('black','orange'), name='') +
   theme(legend.position = 'bottom', legend.text=element_text(size=12))
-ggsave(filename = 'litter_depth.pdf', width=6, height=5, units='in')
+#ggsave(filename = 'litter_depth.pdf', width=6, height=5, units='in')
 

@@ -10,7 +10,7 @@ Loads libraries, sets up custom theme for ggplot, and reads in data (code not pr
 ```{r setup2, include=FALSE, warning=FALSE, message=FALSE}
 #NOTE: currently doesn't print warnings or messages, take this out while coding
 
-library(plyr) # data structuring
+#library(plyr) # data structuring
 library(tidyverse) # data structuring
 library(ggplot2) # plotting
 library(ggthemes) # plotting
@@ -21,6 +21,7 @@ library(glmmTMB) # glmm with zero-inflation
 library(bbmle) # model comparison tables
 library(broom.mixed)
 source('edivalo-seedlings-traits.R', local=TRUE) # script with the trait data
+source('edivalo-seedlings-environmental.R', local = TRUE) # script with env data
 
 # theme for plotting
 theme_cw <- function () { 
@@ -924,3 +925,31 @@ AICtab(m.biomass, m.cn, m.sla, m.all.traits, m.sla.cn)
 summary(m.all.traits)
 
 ```
+
+
+## Considering light as a continuous variable
+
+Running this with light quantity, doesn't converge. Not sure how long it would be worthwhile to spend trouble-shooting it. Light quality or litter depth do converge both on their own and added to the plot treatments (litter depth and light quantity are strongly correlated at the treatment level)
+```{r continuous-light}
+plot.env$plotid <- as.factor(plot.env$plotid)
+plot.env$block <- as.factor(plot.env$block)
+
+
+nat.seedlings.traits.env <- nat.seedlings.traits %>%
+  left_join(plot.env)
+
+m.sla.litter <- glmmTMB(count.max ~ grazing * nutrient + light + sla.2 +
+                            light*grazing*sla.2 + grazing*nutrient*light +
+                          litter.depth*sla.2 +
+                          (1|species) + (1|block:plotid), 
+                 nat.seedlings.traits.env, family = nbinom2)
+
+tbl_regression(m.sla.litter,
+               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
+                                   'grazing:light','nutrient:light',
+                                   'grazing:nutrient:light',
+                                   'light:sla.2','grazing:sla.2',
+                                   'grazing:light:sla.2'))
+
+```
+
