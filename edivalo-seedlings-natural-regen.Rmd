@@ -74,10 +74,13 @@ nat.seedlings.06$month <- '2020_06'
 nat.seedlings.a <- full_join(nat.seedlings.10, nat.seedlings.03)
 nat.seedlings.b <- full_join(nat.seedlings.05, nat.seedlings.06)
 nat.seedlings <- full_join(nat.seedlings.a, nat.seedlings.b)
-nat.seedlings <- nat.seedlings %>% select(month, everything()) # move month to the front
+
+# move month to the front
+nat.seedlings <- nat.seedlings %>% 
+  select(month, everything())
 
 # total observations of each
-seedling.sums <- colSums(nat.seedlings[7:47], na.rm=TRUE)
+seedling.sums <- colSums(nat.seedlings[7:44], na.rm=TRUE)
 
 
 #View(nat.seedlings)
@@ -389,6 +392,27 @@ new.data$block <- "new"
 new.data$plotid <- "new"
 
 
+# printing species and trait dataset
+nat.seedlings.traits.b <- nat.seedlings.max %>% 
+  full_join(species.size.7, by = 'species')
+
+nat.seedlings.traits.sum.3 <- nat.seedlings.traits.b %>%
+  group_by(species) %>%
+  dplyr::summarise(
+    abundance = mean(count.max),
+    abundance.se = sd(count.max)/sqrt(20),
+    bm.tot = mean(bm.tot), 
+    rt.sh.bm = mean(rt.sh.bm),
+    len.sh = mean(len.sh),
+    sla = mean(sla.2),
+    c.n = mean(c.n.ratio)
+    # traits should be the same as their values, double-check
+  )
+
+nat.seedlings.traits.sum.3 %>% 
+  arrange(-abundance, species) %>%
+  write.csv(file = 'species_traits.csv')
+
 ```
 
 ### Species traits abundance models
@@ -475,7 +499,7 @@ ggplot(nat.seedlings.traits.sum, aes(x = bm.tot, y = abundance,
 ```
 
 
-Preliminary analysis of total biomass trait using a negative binomial distribution. 
+Analysis of total biomass trait using a negative binomial distribution. 
 ```{r trait-biomass-analysis, echo=FALSE, warning=FALSE, message=FALSE}
 
 m.biomass.0 <- glmmTMB(count.max ~ grazing * nutrient + light +
@@ -568,7 +592,7 @@ ggplot(nat.seedlings.traits.sum, aes(x = sla, y = abundance,
 
 ```
 
-Preliminary analysis of SLA
+Analysis of SLA
 ```{r trait-sla-analysis, echo=FALSE, warning=FALSE, message=FALSE}
 
 m.sla.0 <- glmmTMB(count.max ~ grazing * nutrient + light +

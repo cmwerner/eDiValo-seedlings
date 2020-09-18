@@ -1,4 +1,4 @@
-plot.id,treat,block,climate,subplot,cotyledon,achmil,cenjac,cerhol,crebie,crecap,cirsp,diacar,daucar,falvul,galalb,gersp,hyprad,knaarv,lamsp,leuvul,lotcor,lycsp,medfal,pimsax,plalan,plamed,pruvul,scaoch,secvar,sillat,silvul,stemed,trisp,versp,viccra,grass
+plot.id,treat,block,climate,subplot,cotyledon,achmil,cenjac,cerhol,crebie,crecap,cirsp,diacar,daucar,falvul,galalb,gersp,hyprad,knaarv,lamamp,leuvul,lotcor,lycsp,medfal,pimsax,plalan,plamed,pruvul,scaoch,secvar,sillat,silvul,stemed,tripra,vercha,viccra,grass
 1,EL,1,ambient,1,7,,1,,,,,1,,,4,1,,,,,,,,,,,,,,,,,,,,
 1,EL,1,ambient,2,1,1,,,,3,,,,,1,,,,,,,1,,,,,,,,,,,,,,
 2,E,1,ambient,1,2,1,,,2,2,,,,,8,,,,,,,,,,,,,1,2,,,,,,,1
