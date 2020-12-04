@@ -1,0 +1,161 @@
+plotID,block,climatecode,treatmentcode,EFtreatment,climate,exclosure,fertilization,light,litter,plot,subplot,date,doy,lght.ground,rel.light.int
+1.1.1.,1,A,EL,E,Ambient,Fenced,Not fertilized,Light,With litter,1,1,26/05/2019,146,70.49,8.580645161
+1.2.1.,1,A,E,E,Ambient,Fenced,Not fertilized,No light,With litter,1,2,26/05/2019,146,39.94,4.682846758
+1.3.2.,1,A,L,C,Ambient,Grazed,Not fertilized,Light,With litter,2,3,26/05/2019,146,122.67,15.24229622
+1.4.1.,1,A,C,C,Ambient,Grazed,Not fertilized,No light,With litter,2,4,26/05/2019,146,276.4,30.92760434
+1.5.1.,1,A,EF,EF,Ambient,Fenced,Fertilized,No light,With litter,3,5,26/05/2019,146,13.87,1.660481264
+1.6.2.,1,A,EFL,EF,Ambient,Fenced,Fertilized,Light,With litter,3,6,26/05/2019,146,45.31,4.904741286
+1.7.2.,1,A,F,F,Ambient,Grazed,Fertilized,No light,With litter,4,7,26/05/2019,146,24.24,2.840735966
+1.8.1.,1,A,FL,F,Ambient,Grazed,Fertilized,Light,With litter,4,8,26/05/2019,146,267.3,28.97560976
+2.9.1.,2,Fu,EFL,EF,Future,Fenced,Fertilized,Light,With litter,5,9,26/05/2019,146,18.31,2.096164854
+2.10.1.,2,Fu,EF,EF,Future,Fenced,Fertilized,No light,With litter,5,10,26/05/2019,146,121.24,13.91483989
+2.11.2.,2,Fu,FL,F,Future,Grazed,Fertilized,Light,With litter,6,11,26/05/2019,146,79.8,9.257540603
+2.12.2.,2,Fu,F,F,Future,Grazed,Fertilized,No light,With litter,6,12,26/05/2019,146,299.2,32.02054795
+2.13.2.,2,Fu,E,E,Future,Fenced,Not fertilized,No light,With litter,7,13,26/05/2019,146,19.68,2.209498148
+2.14.2.,2,Fu,EL,E,Future,Fenced,Not fertilized,Light,With litter,7,14,26/05/2019,146,20.61,2.159245678
+2.15.1.,2,Fu,L,C,Future,Grazed,Not fertilized,Light,With litter,8,15,26/05/2019,146,147.65,15.93803972
+2.16.2.,2,Fu,C,C,Future,Grazed,Not fertilized,No light,With litter,8,16,26/05/2019,146,36.55,4.03822782
+3.17.2.,3,A,EFL,EF,Ambient,Fenced,Fertilized,Light,With litter,9,17,26/05/2019,146,430.7,44.21971253
+3.18.2.,3,A,EF,EF,Ambient,Fenced,Fertilized,No light,With litter,9,18,26/05/2019,146,25.26,2.841394826
+3.19.1.,3,A,FL,F,Ambient,Grazed,Fertilized,Light,With litter,10,19,26/05/2019,146,783.9,81.47801684
+3.20.1.,3,A,F,F,Ambient,Grazed,Fertilized,No light,With litter,10,20,26/05/2019,146,68.79,7.283989835
+3.21.1.,3,A,L,C,Ambient,Grazed,Not fertilized,Light,With litter,11,21,26/05/2019,146,766.7,87.7733257
+3.22.1.,3,A,C,C,Ambient,Grazed,Not fertilized,No light,With litter,11,22,26/05/2019,146,658.6,69.61209175
+3.23.2.,3,A,EF,EF,Ambient,Fenced,Fertilized,No light,With litter,12,23,26/05/2019,146,533.7,60.6132879
+3.24.2.,3,A,EL,EF,Ambient,Fenced,Fertilized,Light,With litter,12,24,26/05/2019,146,61.81,6.923938613
+4.25.1.,4,Fu,EFL,EF,Future,Fenced,Fertilized,Light,With litter,13,25,26/05/2019,146,736.6,62.19707844
+4.26.1.,4,Fu,EF,EF,Future,Fenced,Fertilized,No light,With litter,13,26,26/05/2019,146,238.4,20.52518295
+4.27.1.,4,Fu,FL,F,Future,Grazed,Fertilized,Light,With litter,14,27,26/05/2019,146,270.8,23.28260683
+4.28.2.,4,Fu,F,F,Future,Grazed,Fertilized,No light,With litter,14,28,26/05/2019,146,575.3,49.43714016
+4.29.1.,4,Fu,C,C,Future,Grazed,Not fertilized,No light,With litter,15,29,26/05/2019,146,1166.3,98.88088173
+4.30.1.,4,Fu,L,C,Future,Grazed,Not fertilized,Light,With litter,15,30,26/05/2019,146,594.7,50.28750211
+4.31.1.,4,Fu,EF,EF,Future,Fenced,Fertilized,No light,With litter,16,31,26/05/2019,146,475.5,41.81690265
+4.32.2.,4,Fu,EFL,EF,Future,Fenced,Fertilized,Light,With litter,16,32,26/05/2019,146,66.66,NA
+5.33.2.,5,A,F,F,Ambient,Grazed,Fertilized,No light,With litter,17,33,26/05/2019,146,530.2,39.76301185
+5.34.2.,5,A,FL,F,Ambient,Grazed,Fertilized,Light,With litter,17,34,26/05/2019,146,655.1,54.56892961
+5.35.1.,5,A,EF,EF,Ambient,Fenced,Fertilized,No light,With litter,18,35,26/05/2019,146,30.27,2.503100968
+5.36.2.,5,A,EFL,EF,Ambient,Fenced,Fertilized,Light,With litter,18,36,26/05/2019,146,103.77,8.13818524
+5.37.1.,5,A,L,C,Ambient,Grazed,Not fertilized,Light,With litter,19,37,26/05/2019,146,165.09,15.12090126
+5.38.1.,5,A,C,C,Ambient,Grazed,Not fertilized,No light,With litter,19,38,26/05/2019,146,178.58,16.0032261
+5.39.1.,5,A,E,E,Ambient,Fenced,Not fertilized,No light,With litter,20,39,26/05/2019,146,71.77,5.696031746
+5.40.2.,5,A,EL,E,Ambient,Fenced,Not fertilized,Light,With litter,20,40,26/05/2019,146,829.1,68.46407927
+6.41.2.,6,Fu,EF,EF,Future,Fenced,Fertilized,No light,With litter,21,41,26/05/2019,146,14.78,1.229106029
+6.42.1,6,Fu,EFL,EF,Future,Fenced,Fertilized,Light,With litter,21,42,26/05/2019,146,554.9,49.48278937
+6.43.2.,6,Fu,FL,F,Future,Grazed,Fertilized,Light,With litter,22,43,26/05/2019,146,153.39,12.35422036
+6.44.1.,6,Fu,F,F,Future,Grazed,Fertilized,No light,With litter,22,44,26/05/2019,146,705.3,58.91738368
+6.45.2.,6,Fu,L,C,Future,Grazed,Not fertilized,Light,With litter,23,45,26/05/2019,146,695.5,62.34313374
+6.46.1.,6,Fu,C,C,Future,Grazed,Not fertilized,No light,With litter,23,46,26/05/2019,146,172.78,14.2876044
+6.47.1.,6,Fu,EL,E,Future,Fenced,Not fertilized,Light,With litter,24,47,26/05/2019,146,564.5,50.89253516
+6.48.1.,6,Fu,E,E,Future,Fenced,Not fertilized,No light,With litter,24,48,26/05/2019,146,862.8,71.24690339
+7.49.1.,7,Fu,FL,F,Future,Grazed,Fertilized,Light,With litter,25,49,26/05/2019,146,577.6,177.6684097
+7.50.2.,7,Fu,F,F,Future,Grazed,Fertilized,No light,With litter,25,50,26/05/2019,146,145.56,44.93979623
+7.51.2.,7,Fu,EFL,EF,Future,Fenced,Fertilized,Light,With litter,26,51,26/05/2019,146,56.11,17.1171446
+7.52.1.,7,Fu,EF,EF,Future,Fenced,Fertilized,No light,With litter,26,52,26/05/2019,146,37.56,11.83737788
+7.53.1.,7,Fu,C,C,Future,Grazed,Not fertilized,No light,With litter,27,53,26/05/2019,146,83.14,8.095423564
+7.54.1.,7,Fu,L,C,Future,Grazed,Not fertilized,Light,With litter,27,54,26/05/2019,146,389.5,129.4880319
+7.55.2.,7,Fu,E,E,Future,Fenced,Not fertilized,No light,With litter,28,55,26/05/2019,146,92.4,9.039326942
+7.56.1.,7,Fu,EL,E,Future,Fenced,Not fertilized,Light,With litter,28,56,26/05/2019,146,111.91,11.11872827
+8.57.2.,8,A,FL,F,Ambient,Grazed,Fertilized,Light,With litter,29,57,26/05/2019,146,319,30.70259865
+8.58.2.,8,A,F,F,Ambient,Grazed,Fertilized,No light,With litter,29,58,26/05/2019,146,177.74,17.10683349
+8.59.1.,8,A,C,C,Ambient,Grazed,Not fertilized,No light,With litter,30,59,26/05/2019,146,169.97,16.47794474
+8.60.1.,8,A,L,C,Ambient,Grazed,Not fertilized,Light,With litter,30,60,26/05/2019,146,554.6,51.2048749
+8.61.2.,8,A,EFL,EF,Ambient,Fenced,Fertilized,Light,With litter,31,61,26/05/2019,146,140.83,13.79469096
+8.62.2.,8,A,EF,EF,Ambient,Fenced,Fertilized,No light,With litter,31,62,26/05/2019,146,34.92,3.04022288
+8.63.1.,8,A,EL,E,Ambient,Fenced,Not fertilized,Light,With litter,32,63,26/05/2019,146,211.9,18.52758591
+8.64.1.,8,A,E,E,Ambient,Fenced,Not fertilized,No light,With litter,32,64,26/05/2019,146,372.6,35.01221575
+9.65.2.,9,Fu,EF,EF,Future,Fenced,Fertilized,No light,With litter,33,65,26/05/2019,146,612.9,50.46936759
+9.66.1,9,Fu,EFL,EF,Future,Fenced,Fertilized,Light,With litter,33,66,26/05/2019,146,835.3,70.20507648
+9.67.1.,9,Fu,F,F,Future,Grazed,Fertilized,No light,With litter,34,67,26/05/2019,146,359.9,32.79271071
+9.68.1.,9,Fu,FL,F,Future,Grazed,Fertilized,Light,With litter,34,68,26/05/2019,146,412.2,38.56661677
+9.69.2.,9,Fu,C,C,Future,Grazed,Not fertilized,No light,With litter,35,69,26/05/2019,146,501,155.3488372
+9.70.2.,9,Fu,L,C,Future,Grazed,Not fertilized,Light,With litter,35,70,26/05/2019,146,795.2,68.49267873
+9.71.2.,9,Fu,EL,E,Future,Fenced,Not fertilized,Light,With litter,36,71,26/05/2019,146,37.68,3.394288803
+9.72.2.,9,Fu,E,E,Future,Fenced,Not fertilized,No light,With litter,36,72,26/05/2019,146,35.21,2.492743363
+10.73.2.,10,A,C,C,Ambient,Grazed,Not fertilized,No light,With litter,37,73,26/05/2019,146,285.3,27.75561825
+10.74.2.,10,A,L,C,Ambient,Grazed,Not fertilized,Light,With litter,37,74,26/05/2019,146,286,22.91483054
+10.75.2.,10,A,E,E,Ambient,Fenced,Not fertilized,No light,With litter,38,75,26/05/2019,146,66.57,5.515327258
+10.76.1.,10,A,EL,E,Ambient,Fenced,Not fertilized,Light,With litter,38,76,26/05/2019,146,215.2,17.26434015
+10.77.1.,10,A,F,F,Ambient,Grazed,Fertilized,No light,With litter,39,77,26/05/2019,146,277.6,22.2133312
+10.78.2.,10,A,FL,F,Ambient,Grazed,Fertilized,Light,With litter,39,78,26/05/2019,146,1138.8,89.03831118
+10.79.2.,10,A,EFL,EF,Ambient,Fenced,Fertilized,Light,With litter,40,79,26/05/2019,146,74.7,5.620344594
+10.80.2.,10,A,EF,EF,Ambient,Fenced,Fertilized,No light,With litter,40,80,26/05/2019,146,453.9,36.00380741
+1.1.1.,1,A,EL,E,Ambient,Fenced,Not fertilized,Light,With litter,1,1,22/07/2019,203,220.8,20.02357849
+1.2.1.,1,A,E,E,Ambient,Fenced,Not fertilized,No light,With litter,1,2,22/07/2019,203,660.7,64.21420935
+1.3.2.,1,A,L,C,Ambient,Grazed,Not fertilized,Light,With litter,2,3,22/07/2019,203,431.7,41.25967696
+1.4.1.,1,A,C,C,Ambient,Grazed,Not fertilized,No light,With litter,2,4,22/07/2019,203,234.7,23.18253655
+1.5.1.,1,A,EF,EF,Ambient,Fenced,Fertilized,No light,With litter,3,5,22/07/2019,203,130.4,12.71946937
+1.6.2.,1,A,EFL,EF,Ambient,Fenced,Fertilized,Light,With litter,3,6,22/07/2019,203,404.6,48.22407628
+1.7.2.,1,A,F,F,Ambient,Grazed,Fertilized,No light,With litter,4,7,22/07/2019,203,519.9,49.20499716
+1.8.1.,1,A,FL,F,Ambient,Grazed,Fertilized,Light,With litter,4,8,22/07/2019,203,1122.3,110.2131003
+2.9.1.,2,Fu,EFL,EF,Future,Fenced,Fertilized,Light,With litter,5,9,22/07/2019,203,84.65,37.68922529
+2.10.1.,2,Fu,EF,EF,Future,Fenced,Fertilized,No light,With litter,5,10,22/07/2019,203,67.91,33.60217714
+2.11.2.,2,Fu,FL,F,Future,Grazed,Fertilized,Light,With litter,6,11,22/07/2019,203,599.4,254.8469388
+2.12.2.,2,Fu,F,F,Future,Grazed,Fertilized,No light,With litter,6,12,22/07/2019,203,724.3,331.7911131
+2.13.2.,2,Fu,E,E,Future,Fenced,Not fertilized,No light,With litter,7,13,22/07/2019,203,108.33,11.04393924
+2.14.2.,2,Fu,EL,E,Future,Fenced,Not fertilized,Light,With litter,7,14,22/07/2019,203,85.26,9.095370173
+2.15.1.,2,Fu,L,C,Future,Grazed,Not fertilized,Light,With litter,8,15,22/07/2019,203,1089.8,106.5298143
+2.16.2.,2,Fu,C,C,Future,Grazed,Not fertilized,No light,With litter,8,16,22/07/2019,203,751,73.93915526
+3.17.2.,3,A,EFL,EF,Ambient,Fenced,Fertilized,Light,With litter,9,17,22/07/2019,203,208.2,20.3758074
+3.18.2.,3,A,EF,EF,Ambient,Fenced,Fertilized,No light,With litter,9,18,22/07/2019,203,145.68,13.35288726
+3.19.1.,3,A,FL,F,Ambient,Grazed,Fertilized,Light,With litter,10,19,22/07/2019,203,1040.4,102.0500245
+3.20.1.,3,A,F,F,Ambient,Grazed,Fertilized,No light,With litter,10,20,22/07/2019,203,1000.3,94.376828
+3.21.1.,3,A,L,C,Ambient,Grazed,Not fertilized,Light,With litter,11,21,22/07/2019,203,1103.2,104.2722117
+3.22.1.,3,A,C,C,Ambient,Grazed,Not fertilized,No light,With litter,11,22,22/07/2019,203,1014.5,91.91809368
+3.23.2.,3,A,EF,EF,Ambient,Fenced,Fertilized,No light,With litter,12,23,22/07/2019,203,842.8,81.92068429
+3.24.2.,3,A,EL,EF,Ambient,Fenced,Fertilized,Light,With litter,12,24,22/07/2019,203,252.3,22.67457536
+4.25.1.,4,Fu,EFL,EF,Future,Fenced,Fertilized,Light,With litter,13,25,22/07/2019,203,168.39,15.7006993
+4.26.1.,4,Fu,EF,EF,Future,Fenced,Fertilized,No light,With litter,13,26,22/07/2019,203,426.9,41.70574443
+4.27.1.,4,Fu,FL,F,Future,Grazed,Fertilized,Light,With litter,14,27,22/07/2019,203,903.5,87.42138365
+4.28.2.,4,Fu,F,F,Future,Grazed,Fertilized,No light,With litter,14,28,22/07/2019,203,779.2,94.22007255
+4.29.1.,4,Fu,C,C,Future,Grazed,Not fertilized,No light,With litter,15,29,22/07/2019,203,822.9,89.4845585
+4.30.1.,4,Fu,L,C,Future,Grazed,Not fertilized,Light,With litter,15,30,22/07/2019,203,968.5,99.33333333
+4.31.1.,4,Fu,EF,EF,Future,Fenced,Fertilized,No light,With litter,16,31,22/07/2019,203,783.1,83.70029927
+4.32.2.,4,Fu,EFL,EF,Future,Fenced,Fertilized,Light,With litter,16,32,22/07/2019,203,995.7,141.7568337
+5.33.2.,5,A,F,F,Ambient,Grazed,Fertilized,No light,With litter,17,33,22/07/2019,203,498.4,49.64637912
+5.34.2.,5,A,FL,F,Ambient,Grazed,Fertilized,Light,With litter,17,34,22/07/2019,203,274.7,26.75041387
+5.35.1.,5,A,EF,EF,Ambient,Fenced,Fertilized,No light,With litter,18,35,22/07/2019,203,222.5,20.89398066
+5.36.2.,5,A,EFL,EF,Ambient,Fenced,Fertilized,Light,With litter,18,36,22/07/2019,203,228.1,21.66603343
+5.37.1.,5,A,L,C,Ambient,Grazed,Not fertilized,Light,With litter,19,37,22/07/2019,203,377.4,36.0080145
+5.38.1.,5,A,C,C,Ambient,Grazed,Not fertilized,No light,With litter,19,38,22/07/2019,203,568.2,55.10619727
+5.39.1.,5,A,E,E,Ambient,Fenced,Not fertilized,No light,With litter,20,39,22/07/2019,203,513.2,48.58468238
+5.40.2.,5,A,EL,E,Ambient,Fenced,Not fertilized,Light,With litter,20,40,22/07/2019,203,501.2,46.37305699
+6.41.2.,6,Fu,EF,EF,Future,Fenced,Fertilized,No light,With litter,21,41,22/07/2019,203,82.62,7.651416929
+6.42.1,6,Fu,EFL,EF,Future,Fenced,Fertilized,Light,With litter,21,42,22/07/2019,203,237.1,21.84649406
+6.43.2.,6,Fu,FL,F,Future,Grazed,Fertilized,Light,With litter,22,43,22/07/2019,203,1074.6,101.0057336
+6.44.1.,6,Fu,F,F,Future,Grazed,Fertilized,No light,With litter,22,44,22/07/2019,203,688.2,67.05641625
+6.45.2.,6,Fu,L,C,Future,Grazed,Not fertilized,Light,With litter,23,45,22/07/2019,203,1110.4,107.8162928
+6.46.1.,6,Fu,C,C,Future,Grazed,Not fertilized,No light,With litter,23,46,22/07/2019,203,924.9,87.36185888
+6.47.1.,6,Fu,EL,E,Future,Fenced,Not fertilized,Light,With litter,24,47,22/07/2019,203,486.6,46.32962011
+6.48.1.,6,Fu,E,E,Future,Fenced,Not fertilized,No light,With litter,24,48,22/07/2019,203,238.4,23.0605533
+7.49.1.,7,Fu,FL,F,Future,Grazed,Fertilized,Light,With litter,25,49,22/07/2019,203,330,64.06523005
+7.50.2.,7,Fu,F,F,Future,Grazed,Fertilized,No light,With litter,25,50,22/07/2019,203,206.6,85.16075845
+7.51.2.,7,Fu,EFL,EF,Future,Fenced,Fertilized,Light,With litter,26,51,22/07/2019,203,157.98,17.71274807
+7.52.1.,7,Fu,EF,EF,Future,Fenced,Fertilized,No light,With litter,26,52,22/07/2019,203,163.75,15.87186198
+7.53.1.,7,Fu,C,C,Future,Grazed,Not fertilized,No light,With litter,27,53,22/07/2019,203,210.8,21.42276423
+7.54.1.,7,Fu,L,C,Future,Grazed,Not fertilized,Light,With litter,27,54,22/07/2019,203,1017.6,110.2372441
+7.55.2.,7,Fu,E,E,Future,Fenced,Not fertilized,No light,With litter,28,55,22/07/2019,203,553.1,52.59104307
+7.56.1.,7,Fu,EL,E,Future,Fenced,Not fertilized,Light,With litter,28,56,22/07/2019,203,559.4,55.01573564
+8.57.2.,8,A,FL,F,Ambient,Grazed,Fertilized,Light,With litter,29,57,22/07/2019,203,1177.9,111.0388386
+8.58.2.,8,A,F,F,Ambient,Grazed,Fertilized,No light,With litter,29,58,22/07/2019,203,998.9,98.78362342
+8.59.1.,8,A,C,C,Ambient,Grazed,Not fertilized,No light,With litter,30,59,22/07/2019,203,997,91.20014636
+8.60.1.,8,A,L,C,Ambient,Grazed,Not fertilized,Light,With litter,30,60,22/07/2019,203,750.8,71.92948841
+8.61.2.,8,A,EFL,EF,Ambient,Fenced,Fertilized,Light,With litter,31,61,22/07/2019,203,1125.2,106.010929
+8.62.2.,8,A,EF,EF,Ambient,Fenced,Fertilized,No light,With litter,31,62,22/07/2019,203,921.1,87.84930854
+8.63.1.,8,A,EL,E,Ambient,Fenced,Not fertilized,Light,With litter,32,63,22/07/2019,203,1036.7,95.32873563
+8.64.1.,8,A,E,E,Ambient,Fenced,Not fertilized,No light,With litter,32,64,22/07/2019,203,942.5,90.32969139
+9.65.2.,9,Fu,EF,EF,Future,Fenced,Fertilized,No light,With litter,33,65,22/07/2019,203,447.2,41.1521119
+9.66.1,9,Fu,EFL,EF,Future,Fenced,Fertilized,Light,With litter,33,66,22/07/2019,203,1088.4,106.4345785
+9.67.1.,9,Fu,F,F,Future,Grazed,Fertilized,No light,With litter,34,67,22/07/2019,203,1060.7,99.07528489
+9.68.1.,9,Fu,FL,F,Future,Grazed,Fertilized,Light,With litter,34,68,22/07/2019,203,328.3,30.11650307
+9.69.2.,9,Fu,C,C,Future,Grazed,Not fertilized,No light,With litter,35,69,22/07/2019,203,1039.6,88.27375393
+9.70.2.,9,Fu,L,C,Future,Grazed,Not fertilized,Light,With litter,35,70,22/07/2019,203,1016.1,82.7982399
+9.71.2.,9,Fu,EL,E,Future,Fenced,Not fertilized,Light,With litter,36,71,22/07/2019,203,1039.2,85.15240905
+9.72.2.,9,Fu,E,E,Future,Fenced,Not fertilized,No light,With litter,36,72,22/07/2019,203,847.5,72.38640246
+10.73.2.,10,A,C,C,Ambient,Grazed,Not fertilized,No light,With litter,37,73,22/07/2019,203,1168.3,103.0246914
+10.74.2.,10,A,L,C,Ambient,Grazed,Not fertilized,Light,With litter,37,74,22/07/2019,203,1197,107.6148521
+10.75.2.,10,A,E,E,Ambient,Fenced,Not fertilized,No light,With litter,38,75,22/07/2019,203,681.1,59.05662013
+10.76.1.,10,A,EL,E,Ambient,Fenced,Not fertilized,Light,With litter,38,76,22/07/2019,203,1127,100.7689557
+10.77.1.,10,A,F,F,Ambient,Grazed,Fertilized,No light,With litter,39,77,22/07/2019,203,610.3,53.48816827
+10.78.2.,10,A,FL,F,Ambient,Grazed,Fertilized,Light,With litter,39,78,22/07/2019,203,1239.2,110.2294965
+10.79.2.,10,A,EFL,EF,Ambient,Fenced,Fertilized,Light,With litter,40,79,22/07/2019,203,271.4,23.28814141
+10.80.2.,10,A,EF,EF,Ambient,Fenced,Fertilized,No light,With litter,40,80,22/07/2019,203,1054.9,89.64140041
