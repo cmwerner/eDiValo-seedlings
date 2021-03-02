@@ -10,7 +10,7 @@ Loads libraries, sets up custom theme for ggplot, and reads in data (code not pr
 ```{r setup2, include=FALSE, warning=FALSE, message=FALSE}
 #NOTE: currently doesn't print warnings or messages, take this out while coding
 
-library(plyr) # data structuring
+#library(plyr) # data structuring
 library(tidyverse) # data structuring
 library(ggplot2) # plotting
 library(ggthemes) # plotting
@@ -21,6 +21,7 @@ library(glmmTMB) # glmm with zero-inflation
 library(bbmle) # model comparison tables
 library(broom.mixed)
 source('edivalo-seedlings-traits.R', local=TRUE) # script with the trait data
+source('edivalo-seedlings-environmental.R', local = TRUE) # script with env data
 
 # theme for plotting
 theme_cw <- function () { 
@@ -73,10 +74,13 @@ nat.seedlings.06$month <- '2020_06'
 nat.seedlings.a <- full_join(nat.seedlings.10, nat.seedlings.03)
 nat.seedlings.b <- full_join(nat.seedlings.05, nat.seedlings.06)
 nat.seedlings <- full_join(nat.seedlings.a, nat.seedlings.b)
-nat.seedlings <- nat.seedlings %>% select(month, everything()) # move month to the front
+
+# move month to the front
+nat.seedlings <- nat.seedlings %>% 
+  select(month, everything())
 
 # total observations of each
-seedling.sums <- colSums(nat.seedlings[7:47], na.rm=TRUE)
+seedling.sums <- colSums(nat.seedlings[7:44], na.rm=TRUE)
 
 
 #View(nat.seedlings)
@@ -339,7 +343,7 @@ For the trait analyses we will look at the data sliced a slightly different way-
 
 # max across time points (seems to be working, still want to triple-check it)
 nat.seedlings.max <- nat.seedlings.long %>%
-  group_by(plotid, treat, block, grazing, nutrient, light, species) %>%
+  group_by(plotid, treat, block, grazing, nutrient, light, species, climate) %>%
   dplyr::summarise(
     count.max = max(count)
   )
@@ -366,6 +370,48 @@ nat.seedlings.traits.sum <- nat.seedlings.traits %>%
     # traits should be the same as their values, double-check
   )
 
+
+# simpler summary for ggplot (without nitrogen)
+nat.seedlings.traits.sum.2 <- nat.seedlings.traits %>%
+  group_by(grazing, light, species) %>%
+  dplyr::summarise(
+    abundance = mean(count.max),
+    abundance.se = sd(count.max)/sqrt(20),
+    bm.tot = mean(bm.tot), 
+    rt.sh.bm = mean(rt.sh.bm),
+    len.sh = mean(len.sh),
+    sla = mean(sla.2),
+    c.n = mean(c.n.ratio)
+    # traits should be the same as their values, double-check
+  )
+
+# simulated dataset for counter-factual plots
+new.data <- nat.seedlings.traits
+new.data$species <- "new"
+new.data$block <- "new"
+new.data$plotid <- "new"
+
+
+# printing species and trait dataset
+nat.seedlings.traits.b <- nat.seedlings.max %>% 
+  full_join(species.size.7, by = 'species')
+
+nat.seedlings.traits.sum.3 <- nat.seedlings.traits.b %>%
+  group_by(species) %>%
+  dplyr::summarise(
+    abundance = mean(count.max),
+    abundance.se = sd(count.max)/sqrt(20),
+    bm.tot = mean(bm.tot), 
+    rt.sh.bm = mean(rt.sh.bm),
+    len.sh = mean(len.sh),
+    sla = mean(sla.2),
+    c.n = mean(c.n.ratio)
+    # traits should be the same as their values, double-check
+  )
+
+nat.seedlings.traits.sum.3 %>% 
+  arrange(-abundance, species) %>%
+  write.csv(file = 'species_traits.csv')
 
 ```
 
@@ -453,7 +499,7 @@ ggplot(nat.seedlings.traits.sum, aes(x = bm.tot, y = abundance,
 ```
 
 
-Preliminary analysis of total biomass trait using a negative binomial distribution. 
+Analysis of total biomass trait using a negative binomial distribution. 
 ```{r trait-biomass-analysis, echo=FALSE, warning=FALSE, message=FALSE}
 
 m.biomass.0 <- glmmTMB(count.max ~ grazing * nutrient + light +
@@ -488,6 +534,41 @@ p  <- length(coef(m.biomass.specific))
 sum(E2^2) / (N - p) # somewhat overdispersed
 ```
 
+Counterfactual plots (not including nutrients, since they don't interact with the traits). Using re.form = NA to specific population-level predictions (setting all random effects to zero)
+```{r trait-biomass-plots2, echo=FALSE, warning=FALSE, message=FALSE}
+
+
+# currently without nitrogen
+# can also try adding it back in and doing the prediction more clearly
+m.biomass.simple <- glmmTMB(count.max ~ light*grazing*bm.tot + 
+                          (1|species) + (1|block:plotid), 
+                 nat.seedlings.traits, family = nbinom2)
+
+m.biomass.fit <- predict(m.biomass.simple, new.data, allow.new.levels = TRUE, se.fit = TRUE,
+                     re.form = NA, type = 'response')
+new.data$biomass.fit <- m.biomass.fit$fit
+new.data$biomass.fit.se <- m.biomass.fit$se.fit
+
+ggplot(NULL) + 
+  facet_grid(.~grazing) +
+  geom_line(data = new.data, size = 1.2, aes(x = bm.tot, y = biomass.fit, color = light)) + 
+  geom_ribbon(data = new.data, alpha = 0.3,
+              aes(x = bm.tot, y = biomass.fit, 
+                  ymin = biomass.fit - biomass.fit.se, ymax = biomass.fit + biomass.fit.se,
+                  fill = light)) +
+ # geom_point(data = nat.seedlings.traits.sum.2, aes(x = bm.tot, y = abundance, color = light)) + 
+  theme_cw() + 
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  scale_fill_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'bottom', legend.text=element_text(size=12)) + 
+  ylab('Predicted abundance') + 
+  xlab('Biomass')
+#ggsave('biomass-model.pdf', width = 6, height = 4, units = 'in')
+
+
+```
+
 ### SLA 
 Preliminary plot of raw data
 
@@ -511,7 +592,7 @@ ggplot(nat.seedlings.traits.sum, aes(x = sla, y = abundance,
 
 ```
 
-Preliminary analysis of SLA
+Analysis of SLA
 ```{r trait-sla-analysis, echo=FALSE, warning=FALSE, message=FALSE}
 
 m.sla.0 <- glmmTMB(count.max ~ grazing * nutrient + light +
@@ -554,8 +635,8 @@ tbl_regression(m.sla.specific,
 
 ```
 
-Counterfactual plots (not including nutrients, since they don't interact with the traits)
-```{r trait-SLA-plots2}
+Counterfactual plots (not including nutrients, since they don't interact with the traits). Using re.form = NA to specific population-level predictions (setting all random effects to zero)
+```{r trait-SLA-plots2, echo=FALSE, warning=FALSE, message=FALSE}
 
 
 # currently without nitrogen
@@ -564,28 +645,27 @@ m.sla.simple <- glmmTMB(count.max ~ light*grazing*sla.2 +
                           (1|species) + (1|block:plotid), 
                  nat.seedlings.traits, family = nbinom2)
 
-
-new.data <- nat.seedlings.traits
-new.data$species <- "new"
-new.data$block <- "new"
-new.data$plotid <- "new"
-
-m.sla.fit <- predict(m.sla.specific, new.data, allow.new.levels = TRUE, se.fit = TRUE)
+m.sla.fit <- predict(m.sla.simple, new.data, allow.new.levels = TRUE, se.fit = TRUE,
+                     re.form = NA, type = 'response')
 new.data$sla.fit <- m.sla.fit$fit
 new.data$sla.fit.se <- m.sla.fit$se.fit
 
-ggplot(new.data, 
-                  aes(x = sla.2, y = sla.fit, 
-                      ymin = sla.fit - sla.fit.se, ymax = sla.fit + sla.fit.se,
-                      fill = light)) + 
-  facet_grid(nutrient~grazing) +
-  geom_line(size = 1.2, aes(color = light)) + 
-  geom_ribbon(alpha = 0.3) +
+ggplot(NULL) + 
+  facet_grid(.~grazing) +
+  geom_line(data = new.data, size = 1.2, aes(x = sla.2, y = sla.fit, color = light)) + 
+  geom_ribbon(data = new.data, alpha = 0.3,
+              aes(x = sla.2, y = sla.fit, 
+                  ymin = sla.fit - sla.fit.se, ymax = sla.fit + sla.fit.se,
+                  fill = light)) +
+#  geom_point(data = nat.seedlings.traits.sum.2, aes(x = sla, y = abundance, color = light)) + 
   theme_cw() + 
   theme(text = element_text(size=12)) +
   scale_color_manual(values=c('black','orange'), name='') +
   scale_fill_manual(values=c('black','orange'), name='') +
-  theme(legend.position = 'bottom', legend.text=element_text(size=12))
+  theme(legend.position = 'bottom', legend.text=element_text(size=12)) + 
+  ylab('Predicted abundance') + 
+  xlab('SLA')
+#ggsave('sla-model-data.pdf', width = 6, height = 4, units = 'in')
 
 
 ```
@@ -653,6 +733,68 @@ E2 <- resid(m.cn.specific.a, type = "pearson")
 N  <- nrow(nat.seedlings.traits)
 p  <- length(coef(m.cn.specific.a)) 
 sum(E2^2) / (N - p) # somewhat overdispersed
+```
+
+Counterfactual plots
+```{r trait-CN-plots2, echo=FALSE, warning=FALSE, message=FALSE}
+
+cn.data <- new.data[complete.cases(new.data),] # because we're missing secvar
+# currently without nitrogen
+# can also try adding it back in and doing the prediction more clearly
+m.cn.simple <- glmmTMB(count.max ~ light*grazing*c.n.ratio + 
+                          (1|species) + (1|block:plotid), 
+                 nat.seedlings.traits, family = nbinom2)
+
+m.cn.fit <- predict(m.cn.simple, cn.data, allow.new.levels = TRUE, se.fit = TRUE,
+                     re.form = NA, type = 'response')
+cn.data$cn.fit <- m.cn.fit$fit
+cn.data$cn.fit.se <- m.cn.fit$se.fit
+
+ggplot(NULL) + 
+  facet_grid(.~grazing) +
+  geom_line(data = cn.data, size = 1.2, aes(x = c.n.ratio, y = cn.fit, color = light)) + 
+  geom_ribbon(data = cn.data, alpha = 0.3,
+              aes(x = c.n.ratio, y = cn.fit, 
+                  ymin = cn.fit - cn.fit.se, ymax = cn.fit + cn.fit.se,
+                  fill = light)) +
+#  geom_point(data = nat.seedlings.traits.sum.2, aes(x = c.n, y = abundance, color = light)) + 
+  theme_cw() + 
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  scale_fill_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'bottom', legend.text=element_text(size=12)) + 
+  ylab('Predicted abundance') + 
+  xlab('C:N')
+#ggsave('cn-model.pdf', width = 6, height = 4, units = 'in')
+
+# also looking at it without grazing since for C:N that has no interaction
+m.cn.simple.2 <- glmmTMB(count.max ~ light*c.n.ratio + 
+                          (1|species) + (1|block:plotid), 
+                 nat.seedlings.traits, family = nbinom2)
+
+m.cn.fit.2 <- predict(m.cn.simple.2, cn.data, allow.new.levels = TRUE, se.fit = TRUE,
+                     re.form = NA, type = 'response')
+cn.data$cn.fit.2 <- m.cn.fit.2$fit
+cn.data$cn.fit.se.2 <- m.cn.fit.2$se.fit
+
+ggplot(NULL) + 
+ # facet_grid(.~grazing) +
+  geom_line(data = cn.data, size = 1.2, aes(x = c.n.ratio, y = cn.fit.2, color = light)) + 
+  geom_ribbon(data = cn.data, alpha = 0.3,
+              aes(x = c.n.ratio, y = cn.fit.2, 
+                  ymin = cn.fit.2 - cn.fit.se.2, ymax = cn.fit.2 + cn.fit.se.2,
+                  fill = light)) +
+#  geom_point(data = nat.seedlings.traits.sum.2, aes(x = c.n, y = abundance, color = light)) + 
+  theme_cw() + 
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  scale_fill_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'bottom', legend.text=element_text(size=12)) + 
+  ylab('Predicted abundance') + 
+  xlab('C:N')
+#ggsave('cn-model-2.pdf', width = 4, height = 4, units = 'in')
+
+
 ```
 
 ### Root-shoot ratio
@@ -807,3 +949,31 @@ AICtab(m.biomass, m.cn, m.sla, m.all.traits, m.sla.cn)
 summary(m.all.traits)
 
 ```
+
+
+## Considering light as a continuous variable
+
+Running this with light quantity, doesn't converge. Not sure how long it would be worthwhile to spend trouble-shooting it. Light quality or litter depth do converge both on their own and added to the plot treatments (litter depth and light quantity are strongly correlated at the treatment level)
+```{r continuous-light}
+plot.env$plotid <- as.factor(plot.env$plotid)
+plot.env$block <- as.factor(plot.env$block)
+
+
+nat.seedlings.traits.env <- nat.seedlings.traits %>%
+  left_join(plot.env)
+
+m.sla.litter <- glmmTMB(count.max ~ grazing * nutrient + light + sla.2 +
+                            light*grazing*sla.2 + grazing*nutrient*light +
+                          litter.depth*sla.2 +
+                          (1|species) + (1|block:plotid), 
+                 nat.seedlings.traits.env, family = nbinom2)
+
+tbl_regression(m.sla.litter,
+               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
+                                   'grazing:light','nutrient:light',
+                                   'grazing:nutrient:light',
+                                   'light:sla.2','grazing:sla.2',
+                                   'grazing:light:sla.2'))
+
+```
+

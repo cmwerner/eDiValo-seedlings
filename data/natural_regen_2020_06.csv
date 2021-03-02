@@ -1,4 +1,4 @@
-date,plotid,treat,climate,subplot,cotyledon or unk,ach mil,agr eup,cen jac,cre bie,cre cap,cir sp,dia car,dau car,fal vul,fall conv,gal alb,gal ver,ger sp,hyp rad,kna arv,larn sp,leu vul,lot cor,lyc sp,med sp,pim sax,pla lan,pla med,pru vul,sca och,sec var,sil lat,sil vul,ste med,tri sp,ver sp,vic cra,grass,cer hol,ran arc,pic hic,triangle seedling (probably chenopodium sp.)
+date,plotid,treat,climate,subplot,cotyledon,ach mil,agr eup,cen jac,cre bie,cre cap,cir sp,dia car,dau car,fal vul,falcon,gal alb,gal ver,ger sp,hyp rad,kna arv,lamamp,leu vul,lot cor,lyc sp,medfal,pim sax,pla lan,pla med,pru vul,sca och,sec var,sil lat,sil vul,ste med,tripra,vercha,vic cra,grass,cer hol,ranacr,pichie,chesp
 08/06/2020,1,EL,ambient,O,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,1,,,,,,,,
 08/06/2020,1,EL,ambient,I,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 08/06/2020,2,E,ambient,O,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -11,10 +11,10 @@ date,plotid,treat,climate,subplot,cotyledon or unk,ach mil,agr eup,cen jac,cre b
 08/06/2020,5,EF,ambient,I,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 08/06/2020,6,EFL,ambient,O,,,,,,,,,,,1,,,,,,,,,,,,,,,,,1,,,,,,,,,,
 08/06/2020,6,EFL,ambient,I,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-08/06/2020,7,AF,ambient,O,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-08/06/2020,7,AF,ambient,I,,,,,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-08/06/2020,8,AFL,ambient,O,,,,,,,,,,,,,,,,,,,,,,,,,,,,1,,,,,,,,,,
-08/06/2020,8,AFL,ambient,I,,,,,,,,,,,,,,,,,,,,,,,,,,,,4,,,,,,,,,,
+08/06/2020,7,F,ambient,O,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+08/06/2020,7,F,ambient,I,,,,,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+08/06/2020,8,FL,ambient,O,,,,,,,,,,,,,,,,,,,,,,,,,,,,1,,,,,,,,,,
+08/06/2020,8,FL,ambient,I,,,,,,,,,,,,,,,,,,,,,,,,,,,,4,,,,,,,,,,
 08/06/2020,9,EFL,future,O,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 08/06/2020,9,EFL,future,I,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 08/06/2020,10,EF,future,O,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

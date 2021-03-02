@@ -12,9 +12,11 @@ Loads libraries, sets up custom theme for ggplot, and reads in data (code not pr
 library(tidyverse)
 library(ggplot2)
 library(ggthemes)
-library(plyr)
-library(coxme)
-library(car)
+library(plyr) # hoping we can cut this by cleaning up summary code
+library(glmmTMB) # for emergence analysis
+library(coxme) # for survival analysis
+library(car) # for survival analysis
+library(survminer) # for survival plots
 
 # theme for plotting
 theme_cw <- function () { 
@@ -34,18 +36,17 @@ theme_cw <- function () {
     )
 }
 
-# Chhaya's path
-#mark.seedlings <- read.csv("data/toothpick_seedling_data_2020_all.csv",
- #                          stringsAsFactors = FALSE)
-#plot.list <- read.csv("data/plot_list.csv", stringsAsFactors = FALSE)
+
+mark.seedlings <- read.csv("data/toothpick_seedling_data_2020_all.csv",
+                           stringsAsFactors = FALSE)
+plot.list <- read.csv("data/plot_list.csv", stringsAsFactors = FALSE)
 
 # Mia's path
-mark.seedlings<-read.csv("C:/Users/mj65tivo/Documents/GitHub/edivalo-seedlings/data/toothpick_seedling_data_2020_all.csv", stringsAsFactors = FALSE)
+#mark.seedlings<-read.csv("C:/Users/mj65tivo/Documents/GitHub/edivalo-seedlings/data/toothpick_seedling_data_2020_all.csv", stringsAsFactors = FALSE)
 #View(mark.seedlings)
 # For Mia: change first column name to month
-colnames(mark.seedlings)[1]<-"month"
+#colnames(mark.seedlings)[1]<-"month"
 
-plot.list <- read.csv("data/plot_list.csv", stringsAsFactors = FALSE)
 
 
 # adding separate columns for exclosure, light, and fertilization treatments
@@ -89,15 +90,14 @@ galium <- filter(mark.plot, species=="galium alb")
 crepis <- filter(mark.plot, species=="crebis bie")
 
 ## everything
-ggplot(mark.plot, aes(x=nutrient, y=total.mean, 
+ggplot(mark.plot, aes(x=grazing, y=total.mean, 
                      ymin=total.mean-total.se, ymax=total.mean+total.se,
-                     color=light, shape=grazing)) +
+                     color=light, shape=nutrient)) +
   facet_grid(month~species) +
   geom_point(size=2, position=position_dodge(0.2)) +
   geom_errorbar(width=0.2, position=position_dodge(0.2)) +
   ylab('Seedling count') +
   xlab('') +
-  scale_x_discrete(labels=c("fertilized" = "fert", "unfertilized" = "unfert")) +
   theme_cw() +
   theme(text = element_text(size=10)) +
   scale_color_manual(values=c('black','orange'), name='') +
@@ -122,7 +122,7 @@ mark.emergence <- mark.seedlings %>%
     )
 
 # summary of number of seedlings emerged per species per plot
-emergence.summary <- mark.emergence %>%
+emergence.plot <- mark.emergence %>%
   group_by(block, plot, grazing, nutrient, light, species) %>%
   dplyr::summarise(
     emerged = sum(emergence.2),
@@ -135,12 +135,12 @@ plot.rep <- rep.int(plot.list$plot, length(species.list))
 block.rep <- rep.int(plot.list$block, length(species.list))
 species.rep <- rep(species.list, each=length(plot.list$plot))
 
-emergence.summary.min <- emergence.summary %>%
+emergence.plot.min <- emergence.plot %>%
   ungroup() %>%
   select(., plot, species, emerged, emerged.1)
 
 emergence.full <- data.frame(plot = plot.rep, species = species.rep, block = block.rep) %>%
-  left_join(emergence.summary.min, by = c('plot', 'species'))
+  left_join(emergence.plot.min, by = c('plot', 'species'))
 
 # consider turning this into a function?
 emergence.full$grazing <- 'sheep'
@@ -160,7 +160,7 @@ emergence.full$emerged.1[is.na(emergence.full$emerged.1)] <- 0
 Plotting emergence by species and treatment
 ```{r emergence-plot, echo=FALSE, warning=FALSE, message=FALSE}
 
-emergence.plot <- emergence.full %>%
+emergence.sum  <- emergence.full %>%
   group_by(grazing, nutrient, light, species) %>%
   dplyr::summarize(
     n = length(emerged),
@@ -168,7 +168,7 @@ emergence.plot <- emergence.full %>%
     emergence.se = sd(emerged)/sqrt(n)
   )
 
-ggplot(emergence.plot,
+ggplot(emergence.sum,
        aes(x=grazing, y=emergence.mean, 
            ymin=emergence.mean-emergence.se, ymax=emergence.mean+emergence.se,
            color=light, shape = nutrient)) +
@@ -184,103 +184,249 @@ ggplot(emergence.plot,
 
 ```
 
-## Next steps
-Analyzing emergence for individual species
-Analyzing emergence for species combined into a single model?
-Structuring and analyzing survival
-Incorporating trait data
-
 ### Emergence Analysis
-Separate model for each species. We may only be able to get useful models for Plantago and Dianthus, but it's possible that models for Galium and/or Medicago will also converge. We can also explore combining these into models that include species id as an effect (probably having it interact with ).
-
-Probably going to want a negative binomial distribution and/or a zero-inflated model for these emergence counts, similar to the models of the naturally regenerating seedlings. Can approach the model structure and model selection in the same way to keep the methods consistent. 
+Separate model for each species, only looking at dianthus and plantago. Currently using negative binomial, seem to be somewhat underdispersed
 
 ```{r emergence-analysis, echo=FALSE, warning=FALSE, message=FALSE}
 
 emerg.pla <- emergence.full %>% filter(species == 'plantago lan')
 emerg.dia <- emergence.full %>% filter(species == 'dianthus car')
 
+m.emergence.pla <- glmmTMB(emerged ~ grazing * light + nutrient*light +
+                     (1|block), 
+                   emerg.pla, family = nbinom2)
+summary(m.emergence.pla)
+E2 <- resid(m.emergence.pla, type = "pearson")
+N  <- nrow(emerg.pla)
+p  <- length(coef(m.emergence.pla)) 
+sum(E2^2) / (N - p) 
 
-
+m.emergence.dia <- glmmTMB(emerged ~ grazing * light + nutrient*light +
+                     (1|block), 
+                   emerg.dia, family = nbinom2)
+summary(m.emergence.dia)
+E2 <- resid(m.emergence.dia, type = "pearson")
+N  <- nrow(emerg.dia)
+p  <- length(coef(m.emergence.dia)) 
+sum(E2^2) / (N - p) 
 
 ```
 
-```{r survival analysis, echo= F, warning = F, message = F}
-# setting up the full data frame with one line for every toothpick at each sampling point
-species.list <- unique(mark.plot$species) # should be 6
-toothpick.list <-unique(mark.seedlings$id..1.6.) # should be 6
-month.list<-unique(mark.seedlings$month) # should be 6
-plot.list<-unique(plot.list$plot)# should be 80
-block.list <-unique(plot.list$block)
+
+## Survival
+Survival structuring 
+
+Below is the code Mia had. Some of this wasn't working or didn't make sense to me, so I ended up taking a different approach. I'm keeping this here in case reverse changes need to be made :-) 
+
+Questions: 1. Are the days based on the actual days we sampled? 2. Cleaner way to do the sampling time etc without all the ifelse statements (ex matching to a vector) 3. Right now the "event" column is just the opposite of the "alive" column. I think it's supposed to be the first time a seedling dies, which takes a little more work. But I need to check with this package, I think it's different from the ones I used before (survival + survminer)
+```{r survival-unused, echo = FALSE}
+# previous structuring work Mia did
+# Something is wrong with the replication order and the blocks/plots aren't lining up
+# so the join isn't working correctly. 
+#To do it the way you have it, you need to check the sorting first, right now
+# the plots are getting assigned to the wrong blocks. 
+
+# # setting up the full data frame with one line for every toothpick at each sampling point
+# species.list <- unique(mark.seedlings$species) # should be 6
+# toothpick.list <-unique(mark.seedlings$id..1.6.) # should be 6
+# month.list<-unique(mark.seedlings$month) # should be 6
+# plot.list.2 <- unique(plot.list$plot)# should be 80
+# block.list <- unique(mark.seedlings$block)
+# 
+# 
+# month.rep1 <- rep(month.list, each= 2880, times = 1)
+# block.rep1 <- rep(block.list, each= 288, times= 6)
+# plot.rep1 <- rep(plot.list.2, each=36, times = length(month.list))
+# species.rep1 <- rep(species.list, each=length(toothpick.list), times = 480)
+# toothpick.rep1 <- rep(toothpick.list, times = 2880)
+# 
+# ## NOTE from Chhaya: mark.alive is exactly the same as mark.seedlings? 
+# ## What was the goal of this step? 
+# 
+# # for each toothpick and sampling time (month) how many seedlings are there (alive)
+#  mark.alive <- mark.seedlings %>%
+#   group_by(month,block, plot, grazing, nutrient, light, species, id..1.6.) %>%
+#   dplyr::summarize(
+#     alive = number)
+# 
+# 
+# ## NOTE from Chhaya: we actually only want a data frame for all the seedlings that did emerge
+# ## If they didn't emerge they shouldn't be included in the survival analysis
+# 
+# # create full data frame to also include the toothpicks were no seedlings were alive/emerged
+# surv.full <-  data.frame(month = month.rep1, block = block.rep1, plot = plot.rep1, 
+#                          species = species.rep1, id..1.6. = toothpick.rep1) %>%
+#   left_join(mark.seedlings)
 
 
-month.rep1 <- rep(month.list, each= 2880, times = 1)
-block.rep1 <- rep(block.list, each= 288, times= 6)
-plot.rep1 <- rep(plot.list, each=36, times = length(month.list))
-species.rep1 <- rep(species.list, each=length(toothpick.list), times = 480)
-toothpick.rep1 <- rep(toothpick.list, times = 2880)
+# surv.full$alive[is.na(surv.full$alive)] <- 0
+# surv.full$alive = as.numeric(surv.full$alive)
+# 
+# surv.full$grazing <- 'sheep'
+# surv.full$grazing[grep('E', surv.full$plot)] <- 'exclosure'
+# surv.full$nutrient <- 'unfertilized'
+# surv.full$nutrient[grep('F', surv.full$plot)] <- 'fertilized'
+# surv.full$light <- 'control'
+# surv.full$light[grep('L', surv.full$plot)] <- 'lamps'
 
-# for each toothpick and sampling time (month) how many seedlings are there (alive)
-mark.alive <- mark.seedlings %>%
-  group_by(month,block, plot, grazing, nutrient, light, species, id..1.6.) %>%
-  dplyr::summarize(
-    alive = number)
+# #  add column for sampling time, day 
+# # and the beginning of the interval in which a seedling could have died 
+# surv.full$sampling = ifelse(surv.full$month == "2", "t1",
+#                           ifelse(surv.full$month == "3", "t2",
+#                                  ifelse(surv.full$month == "4", "t3",
+#                                         ifelse(surv.full$month == "5", "t4",
+#                                                ifelse(surv.full$month == "6", "t5", "t6")))))
+# 
+# surv.full$doy = ifelse(surv.full$month == "2", "50",
+#                           ifelse(surv.full$month == "3", "77",
+#                                  ifelse(surv.full$month == "4", "107",
+#                                         ifelse(surv.full$month == "5", "147",
+#                                                ifelse(surv.full$month == "6", "171", "198")))))
+# 
+# surv.full$int_start = ifelse(surv.full$doy == "50", "0",
+#                                    ifelse(surv.full$month == "77", "50",
+#                                       ifelse(surv.full$month == "107", "77",
+#                                         ifelse(surv.full$month == "147", "107",
+#                                               ifelse(surv.full$month == "171","147", "171")))))
+# 
+# # remove those seedlings that are always zero through month 2,3,4,6,7
+# # THIS STILL NEEDS TO BE DONE
+# surv.full1 <- surv.full %>% 
+#   filter(!(month =="2" & alive == "0"))
+# 
+# # add row with with event (seedling dead = 1, still alive = 0)
+# surv.full1$event <- ifelse(surv.full1$alive == "0", 1, 0)
 
-# create full data frame to also include the toothpicks were no seedlings were alive/emerged
-surv.full <-  data.frame(month = month.rep1, block = block.rep1, plot = plot.rep1, species = species.rep1, id..1.6. = toothpick.rep1) %>%
-  left_join(mark.alive, by = c('plot', 'species','month', 'id..1.6.'))
+## the above keeps 0s for both seedlings that have emerged and died 
+## and seedlings that haven't emerged yet--is this how it should be?
 
-#  add column for sampling time, doy and the beginning of the interval in which a seedling could have died to 
-# data set
-surv.full$sampling = ifelse(surv.full$month == "2", "t1",
-                          ifelse(surv.full$month == "3", "t2",
-                                 ifelse(surv.full$month == "4", "t3",
-                                        ifelse(surv.full$month == "5", "t4",
-                                               ifelse(surv.full$month == "6", "t5", "t6")))))
-
-surv.full$doy = ifelse(surv.full$month == "2", "50",
-                          ifelse(surv.full$month == "3", "77",
-                                 ifelse(surv.full$month == "4", "107",
-                                        ifelse(surv.full$month == "5", "147",
-                                               ifelse(surv.full$month == "6", "171", "198")))))
-
-surv.full$int_start = ifelse(surv.full$doy == "50", "0",
-                                   ifelse(surv.full$month == "77", "50",
-                                      ifelse(surv.full$month == "107", "77",
-                                        ifelse(surv.full$month == "147", "107",
-                                              ifelse(surv.full$month == "171","147", "171")))))
-
-
-surv.full$alive[is.na(surv.full$alive)] <- 0
-surv.full$alive = as.numeric(surv.full$alive)
-
-surv.full$grazing <- 'sheep'
-surv.full$grazing[grep('E', surv.full$plot)] <- 'exclosure'
-surv.full$nutrient <- 'unfertilized'
-surv.full$nutrient[grep('F', surv.full$plot)] <- 'fertilized'
-surv.full$light <- 'control'
-surv.full$light[grep('L', surv.full$plot)] <- 'lamps'
-
-# remove those seedlings that are always zero through month 2,3,4,6,7
-# THIS STILL NEEDS TO BE DONE
-surv.full1 <- surv.full %>% 
-  filter(!(month =="2" & alive == "0"))
-
-# add row with with event (seedling dead = 1, still alive = 0)
-surv.full1$event <- ifelse(surv.full1$alive == "0", 1, 0)
-  
 ```
-# Analyses
-```{r survival models, echo = F, warning = F, message = F}
 
-# We might need to add another level of hierachy in the random term?
+I think we want to limit this to the toothpicks where seedlings did emerge, not all of them. So I'm going to start with the mark.emergence data set, and then increase it to have the data needed for each month. We can use the tidyr function crossing() to expand it to the size we need, and then fill in the number column by merging with the mark.seedlings dataset and setting the NA's to 0 (when a seedling wasn't observed). 
 
-# Dianthus
-dian.mod<-coxme(Surv(doy,event)~grazing*nutrient*light +(1|block/plot), data = subset(surv.full1, species == "dianthus car")
-summary(dian.mod)
-Anova(dian.mod, type = "II", test.statistic = "Chisq")
+
+```{r survival-analysis}
+
+surv.full <- data.frame(month = 2:7) %>% 
+  crossing(mark.emergence) %>% 
+  left_join(mark.seedlings) %>%
+  replace_na(list(number = 0))
+
+surv.full$alive <- ifelse(surv.full$number > 0, 1, 0)
+
+
+# this doesn't use the full time intervals the way Mia has it set up
+surv.full.2 <- surv.full %>%
+  group_by(block, plot, grazing, nutrient, light, species, id..1.6.) %>%
+  dplyr::summarise(
+    dead = 1 - alive[month == max(month)], # at the end dead (1) or alive (0)
+    month.emerged = min(month[alive > 0]),
+    month.died = max(month[alive > 0]),
+    months.alive = (month.died - month.emerged) + 1, # not sure if we want the +1 or not
+    months.alive.2 = sum(alive)
+  )
+
+surv.pla <- filter(surv.full.2, species == 'plantago lan')
+surv.dia <- filter(surv.full.2, species == 'dianthus car')
+
+surv.obj.pla <- Surv(surv.pla$months.alive, surv.pla$dead, type = 'right')
+surv.obj.dia <- Surv(surv.dia$months.alive, surv.dia$dead, type = 'right')
+
+```
+
+Running models for the survival using the coxme package. 
+
+Here I used right-censored models (number of months alive, whether or not they're currently dead). Mia uses a different survival structure, with day of year (could be month or day, that part isn't super important) and event of dying, but this doesn't include information on when they germinated?
+
+The Anova part doesn't seem to be working? But summary() has p-values so I'm not sure why we need it? 
+```{r survival-models}
+
+# Mia: We might need to add another level of hierachy in the random term?
+
+# Dianthus--doesn't run if 3-way interaction is used
+m.surv.dia <- coxme(surv.obj.dia ~ grazing*light + nutrient*light + (1|block/plot), 
+                  data = surv.dia)
+summary(m.surv.dia) # nothing sigificant
+#Anova(m.surv.dia, type = "II", test.statistic = "Chisq")
 
 # Plantago
-plan.mod<-coxme(Surv(doy,event)~grazing*nutrient*light +(1|block/plot), data = subset(surv.full1, species == "plantago lan")
-summary(plan.mod)
-Anova(plan.mod, type = "II", test.statistic = "Chisq")
+m.surv.pla <- coxme(surv.obj.pla ~ grazing*light + nutrient*light + (1|block/plot), 
+                  data = surv.pla)
+summary(m.surv.pla) # nothing significant
+# Anova(m.surv.pla, type = "II", test.statistic = "Chisq") this doesn't run?
+
+```
+
+### Survival plots
+Trying to take a look at the survival patterns, just for plantago. Plotting package doesn't take random effects (ex block) into account
+```{r survival-plots-pla}
+
+# this just makes the legend of the plot easier to see
+surv.pla.2 <- surv.pla
+surv.pla.2$sheep <- ifelse(surv.pla$grazing=='sheep', 1, 0)
+surv.pla.2$fert <- ifelse(surv.pla$nutrient=='fertilized', 1, 0)
+surv.pla.2$lamp <- ifelse(surv.pla$light=='lamps', 1, 0)
+
+surv.fit.pla <- survfit(surv.obj.pla ~ sheep + fert + lamp, 
+                  data = surv.pla.2)
+ggsurvplot(surv.fit.pla, 
+           palette=c('black','orange','black','orange',
+                     'black','orange','black','orange'), 
+           linetype = c('longdash', 'longdash','solid', 'solid', 
+                        'dotted','dotted', 'dashed', 'dashed'), 
+           ggtheme = theme_cw(), 
+           xlab='Months Since Emergence')
+
+
+# just grazing and sheep
+surv.fit.pla.2 <- survfit(surv.obj.pla ~ sheep + lamp, 
+                  data = surv.pla.2)
+ggsurvplot(surv.fit.pla.2, 
+           palette=c('black','orange','black','orange'), 
+           linetype = c('solid', 'solid', 'dashed', 'dashed'), 
+           ggtheme = theme_cw(), 
+           xlab='Months Since Emergence')
+
+```
+
+
+Same for dianthus
+```{r survival-plots-dia}
+
+# this just makes the legend of the plot easier to see
+surv.dia.2 <- surv.dia
+surv.dia.2$sheep <- ifelse(surv.dia$grazing=='sheep', 1, 0)
+surv.dia.2$fert <- ifelse(surv.dia$nutrient=='fertilized', 1, 0)
+surv.dia.2$lamp <- ifelse(surv.dia$light=='lamps', 1, 0)
+
+surv.fit.dia <- survfit(surv.obj.dia ~ sheep + fert + lamp, 
+                  data = surv.dia.2)
+
+## apparently there were no dianthus seedlings in one of the conditions
+## (no sheep, fertilized, lamps)
+ggsurvplot(surv.fit.dia, 
+           palette=c('black','orange','black',
+                     'black','orange','black','orange'), 
+           linetype = c('longdash', 'longdash','solid', 
+                        'dotted','dotted', 'dashed', 'dashed'), 
+           ggtheme = theme_cw(), 
+           xlab='Months Since Emergence')
+
+
+# just grazing and sheep
+# this makes it look like lamps may have had an effect
+# I think looking at a continuous spectrum of light could be a good option moving forward>
+surv.fit.dia.2 <- survfit(surv.obj.dia ~ sheep + lamp, 
+                  data = surv.dia.2)
+ggsurvplot(surv.fit.dia.2, 
+           palette=c('black','orange','black','orange'), 
+           linetype = c('solid', 'solid', 'dashed', 'dashed'), 
+           ggtheme = theme_cw(), 
+           xlab='Months Since Emergence')
+
+```
+
+## Next steps
+Might be worth taking another look at the survival data, especially if Mia can get it set up the way she was thinking to run it using the data structuring work I did. However, right now it looks like nothing is significant for the survival patterns, and similarly not much for emergence. 
+
+Survival plots of Dianthus make it look like light may have had a positive effect on survival in the beginning. I think looking at a continuous spectrum of light might be one way to look at this? 
