@@ -120,7 +120,7 @@ nat.seedlings.plot.sum <- nat.seedlings.long %>%
   group_by(plotid, treat, block, climate, grazing, nutrient, light, month) %>%
   dplyr::summarise(
     total = sum(count),
-        richness = sum(count > 0)
+    richness = sum(count > 0)
   )
 
 nat.seedlings.plot.sum$block <- as_factor(nat.seedlings.plot.sum$block)
