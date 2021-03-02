@@ -64,6 +64,10 @@ names(nat.seedlings.06) <- gsub("[^a-z]","", names(nat.seedlings.06))
 nat.seedlings.10$subplot <- ifelse(nat.seedlings.10$subplot==1, "O", "I")
 nat.seedlings.03$falvul <- as.integer(substr(nat.seedlings.03$falvul, 1, 1))
 nat.seedlings.05 <- nat.seedlings.05[,1:43] # removing blank columsn at the end
+colnames(nat.seedlings.03)[21]<-"lamsp" # change larnsp to lamsp (likely a typo)
+colnames(nat.seedlings.05)[22]<-"lamsp"
+colnames(nat.seedlings.06)[22]<-"lamsp"
+
 
 # add in year_month time point
 nat.seedlings.10$month <- '2019_10'
@@ -481,7 +485,7 @@ Preliminary plot of raw data
 ```{r trait-biomass-plot, echo=FALSE, warning=FALSE, message=FALSE}
 
 ## all species with trait data
-ggplot(nat.seedlings.traits.sum, aes(x = bm.tot, y = abundance, 
+ggplot(subset(nat.seedlings.traits.sum, ! species == "lamsp"), aes(x = bm.tot, y = abundance, 
                                   ymin = abundance - abundance.se,
                                   ymax = abundance + abundance.se,
                                   color = light)) +
