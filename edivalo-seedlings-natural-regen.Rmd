@@ -485,7 +485,7 @@ Preliminary plot of raw data
 ```{r trait-biomass-plot, echo=FALSE, warning=FALSE, message=FALSE}
 
 ## all species with trait data
-ggplot(nat.seedlings.traits.sum, aes(x = bm.tot, y = abundance, 
+ggplot(subset(nat.seedlings.traits.sum, ! species == "lamsp"), aes(x = bm.tot, y = abundance, 
                                   ymin = abundance - abundance.se,
                                   ymax = abundance + abundance.se,
                                   color = light)) +

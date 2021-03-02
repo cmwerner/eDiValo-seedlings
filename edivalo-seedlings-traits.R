@@ -9,6 +9,10 @@ library(ggplot2)
 seedlings.size <- read.csv("data/seedling_traits_size.csv", 
                            stringsAsFactors = FALSE)[,1:7]
 
+# change the names of the newly added species so they match the natural_regen data
+seedlings.size$species[seedlings.size$species == "lampur"] <- "lamsp"
+seedlings.size$species[seedlings.size$species == "lychflc"] <- "lycsp"
+
 # View(seedlings.size)
 
 # calculated metrics: root-shoot length and biomass, total biomass
@@ -63,6 +67,10 @@ seedlings.leaf <- read.csv("data/seedling_traits_SLA.csv",
 
 seedlings.leaf$species <- tolower(seedlings.leaf$species)
 
+# change the names of the newly added species so they match the natural_regen data
+seedlings.leaf$species[seedlings.leaf$species == "lampur"] <- "lamsp"
+seedlings.leaf$species[seedlings.leaf$species == "lychflc"] <- "lycsp"
+
 
 # notes: data frame is currently sorted by individuals (10/species) and leaf
 # where 1 is the first emergent leaf, 2 is the second, and 3 is the third
@@ -91,6 +99,12 @@ species.size.4 <- species.size.3 %>%
 seedlings.cn <- read.csv("data/seedling_trait_CN.csv", stringsAsFactors = FALSE,sep = "") %>% 
   select(species = sample, c.perc, n.perc) %>%  
   filter(!is.na(c.perc))
+
+## Data still missing
+# change the names of the newly added species so they match the natural_regen data
+#seedlings.cn$species[seedling.cn$species == "lampur"] <- "lamsp"
+#seedlings.cn$species[seedling.cn$species == "lychflc"] <- "lycsp"
+
 
 # calculate C:N ratio
 seedlings.cn$c.n.ratio <- seedlings.cn$c.perc / seedlings.cn$n.perc
@@ -123,8 +137,7 @@ ggpairs(species.size.7, columns = c('bm.tot', 'len.sh', 'rt.sh.bm', 'sla.2','c.n
 # total biomass is pos.correlated with shoot length, root:shoot, and neg. with SLA
 # shoot length is also pos. correlated with C:N
 # the only strong (R2 > .5) corrleation is between total biomass and shoot length
-# UPDATE: with the new species there is no strong (R2 > .5) correlation anymore
-
+# UPDATE: with the new species (Lamium pur, Cerastium hol. and Lychnis flc the strong correlation is no longer present)
 ## seeing where our toothpick species fall on these axes
 ggplot(species.size.7, aes(x=bm.tot, y = rt.sh.bm)) + 
   geom_text(aes(label=species, color=toothpicks),hjust=0, vjust=0) +
