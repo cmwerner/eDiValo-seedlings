@@ -21,10 +21,10 @@ plotid,treat,climate
 20,F,ambient
 21,L,ambient
 22,C,ambient
-23,E,ambient
-24,EL,ambient
-25,EL,future
-26,E,future
+23,EF,ambient
+24,EFL,ambient
+25,EFL,future
+26,EF,future
 27,FL,future
 28,F,future
 29,C,future

@@ -6,14 +6,8 @@ library(ggplot2)
 
 ### Biomass and Length ---------------
 # main path
-seedlings.size <- read.csv("data/seedling_trait_size.csv", 
+seedlings.size <- read.csv("data/seedling_traits_size.csv", 
                            stringsAsFactors = FALSE)[,1:7]
-
-# Mia's path
-# seedlings.size <- read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/seedling_trait_size.csv", 
-#                            stringsAsFactors = FALSE)[,1:7]
-# for Mia: change name of fist column to species 
-# colnames(seedlings.size)[1]<-"species"
 
 # View(seedlings.size)
 
@@ -61,15 +55,9 @@ species.size.3$toothpicks <- species.size.3$species %in% toothpick.list
 ### SLA ----------------
 
 # main path
-seedlings.leaf <- read.csv("data/seedling_trait_SLA.csv", 
+seedlings.leaf <- read.csv("data/seedling_traits_SLA.csv", 
                            stringsAsFactors = FALSE) %>%
   select(group:size.mm2)
-
-# Mia's path
-#seedlings.leaf <- read.csv("C:/Users/mj65tivo/Dropbox/eDiValo-seedlings/Data Entry/seedling_trait_SLA.csv", 
-#                           stringsAsFactors = FALSE)[,1:6]
-# For Mia: change name of first column to species
-# colnames(seedlings.leaf)[1]<-"species"
 
 # View(seedlings.leaf)
 
@@ -100,9 +88,8 @@ species.size.4 <- species.size.3 %>%
 
 ### C:N---------------
 # main path
-seedlings.cn <- read.csv("data/seedling_trait_CN.csv", 
-                           stringsAsFactors = FALSE) %>% 
-  select(species = sample, c.perc, n.perc) %>%
+seedlings.cn <- read.csv("data/seedling_trait_CN.csv", stringsAsFactors = FALSE,sep = "") %>% 
+  select(species = sample, c.perc, n.perc) %>%  
   filter(!is.na(c.perc))
 
 # calculate C:N ratio
@@ -136,6 +123,7 @@ ggpairs(species.size.7, columns = c('bm.tot', 'len.sh', 'rt.sh.bm', 'sla.2','c.n
 # total biomass is pos.correlated with shoot length, root:shoot, and neg. with SLA
 # shoot length is also pos. correlated with C:N
 # the only strong (R2 > .5) corrleation is between total biomass and shoot length
+# UPDATE: with the new species there is no strong (R2 > .5) correlation anymore
 
 ## seeing where our toothpick species fall on these axes
 ggplot(species.size.7, aes(x=bm.tot, y = rt.sh.bm)) + 

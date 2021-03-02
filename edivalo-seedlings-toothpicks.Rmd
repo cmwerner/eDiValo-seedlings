@@ -41,14 +41,6 @@ mark.seedlings <- read.csv("data/toothpick_seedling_data_2020_all.csv",
                            stringsAsFactors = FALSE)
 plot.list <- read.csv("data/plot_list.csv", stringsAsFactors = FALSE)
 
-# Mia's path
-#mark.seedlings<-read.csv("C:/Users/mj65tivo/Documents/GitHub/edivalo-seedlings/data/toothpick_seedling_data_2020_all.csv", stringsAsFactors = FALSE)
-#View(mark.seedlings)
-# For Mia: change first column name to month
-#colnames(mark.seedlings)[1]<-"month"
-
-
-
 # adding separate columns for exclosure, light, and fertilization treatments
 mark.seedlings$grazing <- 'sheep'
 mark.seedlings$grazing[grep('E', mark.seedlings$plot)] <- 'exclosure'
@@ -56,6 +48,13 @@ mark.seedlings$nutrient <- 'unfertilized'
 mark.seedlings$nutrient[grep('F', mark.seedlings$plot)] <- 'fertilized'
 mark.seedlings$light <- 'control'
 mark.seedlings$light[grep('L', mark.seedlings$plot)] <- 'lamps'
+
+# change plotnames of those plots that were accidentally fertilized  for two consecutive years
+mark.seedlings$plot[mark.seedlings$plot == "23E"] <- "23EF"
+mark.seedlings$plot[mark.seedlings$plot == "24EL"] <- "24EFL"
+mark.seedlings$plot[mark.seedlings$plot == "25EL"] <- "25EFL"
+mark.seedlings$plot[mark.seedlings$plot == "26E"] <- "26EF"
+
 
 # summary of total number by species, plot, and month
 mark.summary <- mark.seedlings %>%
