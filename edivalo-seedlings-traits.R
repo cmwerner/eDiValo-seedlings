@@ -96,15 +96,14 @@ species.size.4 <- species.size.3 %>%
 
 ### C:N---------------
 # main path
-seedlings.cn <- read.csv("data/seedling_trait_CN.csv", stringsAsFactors = FALSE,sep = "") %>% 
+seedlings.cn <- read.csv("data/seedling_trait_CN.csv", stringsAsFactors = FALSE) %>% 
   select(species = sample, c.perc, n.perc) %>%  
   filter(!is.na(c.perc))
 
-## Data still missing
-# change the names of the newly added species so they match the natural_regen data
-#seedlings.cn$species[seedling.cn$species == "lampur"] <- "lamsp"
-#seedlings.cn$species[seedling.cn$species == "lychflc"] <- "lycsp"
 
+# change the names of the newly added species so they match the natural_regen data
+seedlings.cn$species[seedlings.cn$species == "lampur"] <- "lamsp"
+seedlings.cn$species[seedlings.cn$species == "lychflc"] <- "lycsp"
 
 # calculate C:N ratio
 seedlings.cn$c.n.ratio <- seedlings.cn$c.perc / seedlings.cn$n.perc

@@ -49,6 +49,10 @@ mark.seedlings$nutrient[grep('F', mark.seedlings$plot)] <- 'fertilized'
 mark.seedlings$light <- 'control'
 mark.seedlings$light[grep('L', mark.seedlings$plot)] <- 'lamps'
 
+# add columns for climate treatment
+mark.seedlings$climate<- 'ambient'
+mark.seedlings$climate[grep('Fu', mark.seedlings$block)] <-'future'
+
 # change plotnames of those plots that were accidentally fertilized  for two consecutive years
 mark.seedlings$plot[mark.seedlings$plot == "23E"] <- "23EF"
 mark.seedlings$plot[mark.seedlings$plot == "24EL"] <- "24EFL"
@@ -62,6 +66,13 @@ mark.summary <- mark.seedlings %>%
   dplyr::summarize(
     count = sum(number),
     count.2 = sum(number>0))
+
+# summary of total number by species, plot, month and climate
+mark.summary.clim <- mark.seedlings %>%
+    group_by(block, plot, grazing, nutrient, light, species, month, climate) %>%
+  dplyr::summarize(
+    count.clim = sum(number),
+    count.2.clim = sum(number>0))
 
 # combine plot numbers and treatments together in plot list file
 plot.list$plot <- paste(plot.list$plotid, plot.list$treat, sep="")
@@ -104,6 +115,62 @@ ggplot(mark.plot, aes(x=grazing, y=total.mean,
 
 #ggsave(filename = 'species_time.pdf', width=10, height=8, units='in')
 
+# taking into account climate
+mark.plot.clim <- mark.summary.clim %>% 
+  group_by(grazing, nutrient, light, species, climate, month) %>%
+  dplyr::summarize(
+    plots.present.clim = length(count.clim),
+    total.mean.clim = sum(count.clim)/10,
+    total.se.clim = sd(count.clim)/sqrt(10))
+
+plantago <- filter(mark.plot.clim, species=="plantago lan")
+daucus <- filter(mark.plot.clim, species=="daucus car")
+medicago <- filter(mark.plot.clim, species=="medicago fal.")
+dianthus <- filter(mark.plot.clim, species=="dianthus car")
+galium <- filter(mark.plot.clim, species=="galium alb")
+crepis <- filter(mark.plot.clim, species=="crebis bie")
+
+## everything apart from month
+ggplot(mark.plot.clim, aes(x=grazing, y=total.mean.clim, 
+                     ymin=total.mean.clim-total.se.clim, ymax=total.mean.clim+total.se.clim,
+                     color=light, shape=nutrient)) +
+  facet_grid(climate~species) +
+  geom_point(size=2, position=position_dodge(0.2)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.2)) +
+  ylab('Seedling count') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=10)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'top', legend.text=element_text(size=10))
+
+## plotting plantago and dianthus separatly to be able to include months in the figure
+
+ggplot(plantago, aes(x=grazing, y=total.mean.clim, 
+                     ymin=total.mean.clim-total.se.clim, ymax=total.mean.clim+total.se.clim,
+                     color=light, shape=nutrient)) +
+  facet_grid(climate~month) +
+  geom_point(size=2, position=position_dodge(0.2)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.2)) +
+  ylab('Seedling count') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=10)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'top', legend.text=element_text(size=10))
+
+ggplot(dianthus, aes(x=grazing, y=total.mean.clim, 
+                     ymin=total.mean.clim-total.se.clim, ymax=total.mean.clim+total.se.clim,
+                     color=light, shape=nutrient)) +
+  facet_grid(climate~month) +
+  geom_point(size=2, position=position_dodge(0.2)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.2)) +
+  ylab('Seedling count') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=10)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'top', legend.text=element_text(size=10))
 ```
 
 
@@ -119,10 +186,25 @@ mark.emergence <- mark.seedlings %>%
     emergence.2 = max(number),
     emergence.1 = ifelse(emergence.2 > 0, 1, 0)
     )
+# including climate
+mark.emergence.clim <- mark.seedlings %>%
+  group_by(block, plot, climate, grazing, nutrient, light, species, id..1.6.) %>%
+  dplyr::summarize(
+    emergence.2 = max(number),
+    emergence.1 = ifelse(emergence.2 > 0, 1, 0)
+    )
 
 # summary of number of seedlings emerged per species per plot
 emergence.plot <- mark.emergence %>%
   group_by(block, plot, grazing, nutrient, light, species) %>%
+  dplyr::summarise(
+    emerged = sum(emergence.2),
+    emerged.1 = sum(emergence.1)
+  )
+
+# including climate
+emergence.plot.clim <- mark.emergence.clim %>%
+  group_by(block, plot, climate, grazing, nutrient, light, species) %>%
   dplyr::summarise(
     emerged = sum(emergence.2),
     emerged.1 = sum(emergence.1)
@@ -141,6 +223,14 @@ emergence.plot.min <- emergence.plot %>%
 emergence.full <- data.frame(plot = plot.rep, species = species.rep, block = block.rep) %>%
   left_join(emergence.plot.min, by = c('plot', 'species'))
 
+# including climate
+emergence.plot.min.clim <- emergence.plot.clim %>%
+  ungroup() %>%
+  select(., plot, species, emerged, emerged.1)
+
+emergence.full.clim <- data.frame(plot = plot.rep, species = species.rep, block = block.rep) %>%
+  left_join(emergence.plot.min.clim, by = c('plot', 'species'))
+
 # consider turning this into a function?
 emergence.full$grazing <- 'sheep'
 emergence.full$grazing[grep('E', emergence.full$plot)] <- 'exclosure'
@@ -149,9 +239,21 @@ emergence.full$nutrient[grep('F', emergence.full$plot)] <- 'fertilized'
 emergence.full$light <- 'control'
 emergence.full$light[grep('L', emergence.full$plot)] <- 'lamps'
 
+# including climate
+emergence.full.clim$grazing <- 'sheep'
+emergence.full.clim$grazing[grep('E', emergence.full.clim$plot)] <- 'exclosure'
+emergence.full.clim$nutrient <- 'unfertilized'
+emergence.full.clim$nutrient[grep('F', emergence.full.clim$plot)] <- 'fertilized'
+emergence.full.clim$light <- 'control'
+emergence.full.clim$light[grep('L', emergence.full.clim$plot)] <- 'lamps'
+emergence.full.clim$climate<- ifelse(emergence.full.clim$block %in% c(1,3,5,7,10),'ambient', 'future')
+
 # changing added 'na' rows to zeros
 emergence.full$emerged[is.na(emergence.full$emerged)] <- 0
 emergence.full$emerged.1[is.na(emergence.full$emerged.1)] <- 0
+
+emergence.full.clim$emerged[is.na(emergence.full.clim$emerged)] <- 0
+emergence.full.clim$emerged.1[is.na(emergence.full.clim$emerged.1)] <- 0
 
 ```
 
@@ -181,6 +283,29 @@ ggplot(emergence.sum,
   scale_color_manual(values=c('black','orange'), name='') +
   theme(legend.position = 'right', legend.text=element_text(size=10))
 
+# including climate
+emergence.sum.clim  <- emergence.full.clim %>%
+  group_by(grazing, nutrient, light, species,climate) %>%
+  dplyr::summarize(
+    n = length(emerged),
+    emergence.mean = mean(emerged, na.rm = TRUE),
+    emergence.se = sd(emerged)/sqrt(n)
+  )
+
+ggplot(emergence.sum.clim,
+       aes(x=grazing, y=emergence.mean, 
+           ymin=emergence.mean-emergence.se, ymax=emergence.mean+emergence.se,
+           color=light, shape = nutrient)) +
+  facet_grid(species~climate) +
+  geom_point(size=3, position=position_dodge(0.3)) +
+  geom_errorbar(width=0.1, position=position_dodge(0.3)) +
+  ylab('Seedling emergence') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=10)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'right', legend.text=element_text(size=10))
+
 ```
 
 ### Emergence Analysis
@@ -190,6 +315,11 @@ Separate model for each species, only looking at dianthus and plantago. Currentl
 
 emerg.pla <- emergence.full %>% filter(species == 'plantago lan')
 emerg.dia <- emergence.full %>% filter(species == 'dianthus car')
+
+# including climate
+emerg.pla.clim <- emergence.full.clim %>% filter(species == 'plantago lan')
+emerg.dia.clim <- emergence.full.clim %>% filter(species == 'dianthus car')
+
 
 m.emergence.pla <- glmmTMB(emerged ~ grazing * light + nutrient*light +
                      (1|block), 
@@ -207,6 +337,25 @@ summary(m.emergence.dia)
 E2 <- resid(m.emergence.dia, type = "pearson")
 N  <- nrow(emerg.dia)
 p  <- length(coef(m.emergence.dia)) 
+sum(E2^2) / (N - p) 
+
+# including climate
+m.emergence.pla.clim <- glmmTMB(emerged ~ (grazing + nutrient + light + climate)^4 +
+                     (1|block), 
+                   emerg.pla.clim, family = nbinom2)
+summary(m.emergence.pla.clim)
+E2 <- resid(m.emergence.pla.clim, type = "pearson")
+N  <- nrow(emerg.pla.clim)
+p  <- length(coef(m.emergence.pla.clim)) 
+sum(E2^2) / (N - p) 
+
+m.emergence.dia.clim <- glmmTMB(emerged ~ grazing* nutrient*light + grazing*nutrient*climate + light*climate+
+                     (1|block), 
+                   emerg.dia.clim, family = nbinom2)
+summary(m.emergence.dia.clim)
+E2 <- resid(m.emergence.dia.clim, type = "pearson")
+N  <- nrow(emerg.dia.clim)
+p  <- length(coef(m.emergence.dia.clim)) 
 sum(E2^2) / (N - p) 
 
 ```
