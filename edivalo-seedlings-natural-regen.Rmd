@@ -135,7 +135,7 @@ nat.seedlings.plot.sum.2 <- filter(nat.seedlings.plot.sum,
                                    month %in% c('2019_10','2020_03','2020_05'))
 ```
 
-For summary richness and cout analyses, need to make sure block and plotid are being treated as factors
+For summary richness and count analyses, need to make sure block and plotid are being treated as factors
 ## Total seedlings count
 Summary for plotting total and richness (code not printed)
 ```{r summary-plot, echo=FALSE, warning=FALSE, message=FALSE}

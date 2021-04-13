@@ -11,7 +11,7 @@ seedlings.size <- read.csv("data/seedling_traits_size.csv",
 
 # change the names of the newly added species so they match the natural_regen data
 seedlings.size$species[seedlings.size$species == "lampur"] <- "lamsp"
-seedlings.size$species[seedlings.size$species == "lychflc"] <- "lycsp"
+seedlings.size$species[seedlings.size$species %in% c("lychflc", "lycflc")] <- "lycsp"
 
 # View(seedlings.size)
 
@@ -69,7 +69,7 @@ seedlings.leaf$species <- tolower(seedlings.leaf$species)
 
 # change the names of the newly added species so they match the natural_regen data
 seedlings.leaf$species[seedlings.leaf$species == "lampur"] <- "lamsp"
-seedlings.leaf$species[seedlings.leaf$species == "lychflc"] <- "lycsp"
+seedlings.leaf$species[seedlings.leaf$species %in% c("lychflc", "lycflc")] <- "lycsp"
 
 
 # notes: data frame is currently sorted by individuals (10/species) and leaf
@@ -103,7 +103,7 @@ seedlings.cn <- read.csv("data/seedling_trait_CN.csv", stringsAsFactors = FALSE)
 
 # change the names of the newly added species so they match the natural_regen data
 seedlings.cn$species[seedlings.cn$species == "lampur"] <- "lamsp"
-seedlings.cn$species[seedlings.cn$species == "lychflc"] <- "lycsp"
+seedlings.cn$species[seedlings.cn$species %in% c("lychflc", "lycflc")] <- "lycsp"
 
 # calculate C:N ratio
 seedlings.cn$c.n.ratio <- seedlings.cn$c.perc / seedlings.cn$n.perc
