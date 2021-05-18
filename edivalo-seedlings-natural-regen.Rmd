@@ -135,312 +135,6 @@ nat.seedlings.plot.sum.2 <- filter(nat.seedlings.plot.sum,
                                    month %in% c('2019_10','2020_03','2020_05'))
 ```
 
-For summary richness and count analyses, need to make sure block and plotid are being treated as factors
-## Total seedlings count
-Summary for plotting total and richness (code not printed)
-```{r summary-plot, echo=FALSE, warning=FALSE, message=FALSE}
-#NOTE: currently doesn't print warnings or messages, take this out while coding
-
-# summarize by month and treatments for plotting
-nat.seedlings.summary <- nat.seedlings.plot.sum.2 %>% 
-  group_by(grazing, nutrient, light, month) %>%
-  dplyr::summarise(
-    n = length(total),
-        total.mean = mean(total),
-        total.se = sd(total)/sqrt(n),
-        rich.mean = mean(richness),
-        rich.se = sd(richness)/sqrt(n)
-  )
-
-# including climate
-nat.seedlings.summary.clim <- nat.seedlings.plot.sum.2 %>% 
-  group_by(climate,grazing, nutrient, light, month) %>%
-  dplyr::summarise(
-    n = length(total),
-        total.mean = mean(total),
-        total.se = sd(total)/sqrt(n),
-        rich.mean = mean(richness),
-        rich.se = sd(richness)/sqrt(n)
-  )
-
-```
-
-Summary for analyzing total and richness (code not printed)
-```{r summary-analysis, echo=FALSE, warning=FALSE, message=FALSE}
-#NOTE: currently doesn't print warnings or messages, take this out while coding
-# splitting data into just fall or just spring for modeling
-nat.seedlings.fall <- nat.seedlings.plot.sum %>% filter(month == '2019_10')
-nat.seedlings.spring <- nat.seedlings.plot.sum %>% filter(month == '2020_03')
-nat.seedlings.late <- nat.seedlings.plot.sum %>% filter(month == '2020_05')
-
-# combined fall and spring together
-nat.seedlings.long.fallspring <- nat.seedlings.long %>%
-  filter(month %in% c('2019_10', '2020_03'))
-
-nat.seedlings.plot.both <- nat.seedlings.long.fallspring %>% 
-  group_by(plotid, treat, block, climate, grazing, nutrient, light) %>%
-  dplyr::summarise(
-    total = sum(count),
-        richness = sum(count > 0)
-  )
-
-nat.seedlings.plot.both$block <- as_factor(nat.seedlings.plot.both$block)
-nat.seedlings.plot.both$plotid <- as_factor(nat.seedlings.plot.both$plotid)
-```
-
-
-### Total seedling count plot
-```{r summary-plot-total, echo=FALSE, warning=FALSE, message=FALSE}
-#NOTE: currently doesn't print warnings or messages, take this out while coding}
-ggplot(nat.seedlings.summary, aes(x=nutrient, y=total.mean, 
-                                  ymin=total.mean-total.se,
-                                  ymax=total.mean+total.se,
-                                  color=light)) +
-  facet_grid(month~grazing) +
-  geom_point(size=2, position=position_dodge(0.2)) +
-  geom_errorbar(width=0.2, position=position_dodge(0.2)) +
-  ylab('Total seedling count') +
-  xlab('') +
-  theme_cw() +
-  theme(text = element_text(size=12)) +
-  scale_color_manual(values=c('black','orange'), name='') +
-  theme(legend.position = 'bottom', legend.text=element_text(size=12))
-
-# including climate
-ggplot(nat.seedlings.summary.clim, aes(x=nutrient, y=total.mean, 
-                                  ymin=total.mean-total.se,
-                                  ymax=total.mean+total.se,
-                                  color=light, shape = climate)) +
-  facet_grid(month~grazing) +
-  geom_point(size=2, position=position_dodge(0.2)) +
-  geom_errorbar(width=0.2, position=position_dodge(0.2)) +
-  ylab('Total seedling count') +
-  xlab('') +
-  theme_cw() +
-  theme(text = element_text(size=12)) +
-  scale_color_manual(values=c('black','orange'), name='') +
-  theme(legend.position = 'bottom', legend.text=element_text(size=12))
-
-#ggsave(filename = 'nat_regen_total_time.pdf', width=6, height=5, units='in')
-```
-
-### Total seedling analysis
-
-#### With time
-```{r total-seedling-time, echo=FALSE, warning=FALSE, message=FALSE}
-model.total <- nat.seedlings.plot.sum %>%
-  lmer(total ~ grazing + nutrient + light + month +
-         grazing:nutrient + grazing:light + grazing:month +
-         nutrient:light + nutrient:month + light:month +
-         grazing:nutrient:light + 
-         (1|block:plotid),.)
-tbl_regression(model.total, 
-               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
-  'grazing:light','nutrient:light','grazing:nutrient:light'))
-
-# including climate
-model.total.clim <- nat.seedlings.plot.sum %>%
-  lmer(total ~ grazing + nutrient + light + month + climate +
-         grazing:nutrient + grazing:light + grazing:month + grazing:climate +
-         nutrient:light + nutrient:month + nutrient:climate + light:month + light:climate + month:climate + grazing:nutrient:light + grazing:nutrient:light:climate +
-         (1|block:plotid),.)
-tbl_regression(model.total.clim)
-
-```
-
-
-Looking at October and March time points as 1. separate models or 2. a combined sum. I think we can make the argument that if we do it this way we won't need time series analyses since we expect Oct seedlings to have died or grown by March, mostly not resampling the same individuals. But there are other approaches to this that use the time series angle.
-
-#### Fall only
-```{r tot-seedling-fall, echo=FALSE, warning=FALSE, message=FALSE}
-#NOTE: currently doesn't print warnings or messages, take this out while coding
-
-# want to use block:plot for random effect, but have the error
-# number of levels of each grouping factor must be < number of observations
-# would need a meta-plot that is the grazing x fert treatment instead
-model.total.fall <- nat.seedlings.fall %>%
-  lmer(total ~ grazing * nutrient * light + (1|block),.)
-tbl_regression(model.total.fall, 
-               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
-  'grazing:light','nutrient:light','grazing:nutrient:light'))
-
-# including climate
-model.total.fall.clim <- nat.seedlings.fall %>%
-  lmer(total ~ grazing * nutrient * light *climate + (1|block),.)
-tbl_regression(model.total.fall.clim, 
-               show_single_row = c('grazing','nutrient','light', 'climate','grazing:nutrient',
-  'grazing:light','nutrient:light','grazing:nutrient:light'))
-```
-
-#### Spring only
-```{r tot-seedling-spring, echo=FALSE, warning=FALSE, message=FALSE}
-#NOTE: currently doesn't print warnings or messages, take this out while coding
-
-model.total.spring <- nat.seedlings.spring %>%
-  lmer(total ~ grazing * nutrient * light + (1|block),.)
-tbl_regression(model.total.spring, 
-               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
-                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
-# including climate
-model.total.spring.clim <- nat.seedlings.spring %>%
-  lmer(total ~ grazing * nutrient * light * climate + (1|block),.)
-tbl_regression(model.total.spring.clim, 
-               show_single_row = c('grazing','nutrient','light', 'climate','grazing:nutrient',
-                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
-```
-
-#### Both combined
-```{r tot-seedling-both, echo=FALSE, warning=FALSE, message=FALSE}
-#NOTE: currently doesn't print warnings or messages, take this out while coding
-
-model.total.both <- nat.seedlings.plot.both %>%
-  lmer(total ~ grazing * nutrient * light + (1|block),.)
-tbl_regression(model.total.both, 
-               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
-                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
-# including climate
-model.total.both.clim <- nat.seedlings.plot.both %>%
-  lmer(total ~ grazing * nutrient * light * climate + (1|block),.)
-tbl_regression(model.total.both.clim, 
-               show_single_row = c('grazing','nutrient','light', 'climate','grazing:nutrient',
-                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
-
-```
-
-
-## Seedling richness
-### Seedling richness plot
-```{r summary-plot-richness, echo=FALSE, warning=FALSE, message=FALSE}
-#NOTE: currently doesn't print warnings or messages, take this out while coding}
-ggplot(nat.seedlings.summary, aes(x=nutrient, y=rich.mean, 
-                                  ymin=rich.mean-rich.se, 
-                                  ymax=rich.mean+rich.se,
-                                  color=light)) +
-  facet_grid(month~grazing) +
-  geom_point(size=2, position=position_dodge(0.2)) +
-  geom_errorbar(width=0.2, position=position_dodge(0.2)) +
-  ylab('Seedling richness') +
-  xlab('') +
-  theme_cw() +
-  theme(text = element_text(size=12)) +
-  scale_color_manual(values=c('black','orange'), name='') +
-  theme(legend.position = 'bottom', legend.text=element_text(size=12))
-
-# including climate
-ggplot(nat.seedlings.summary.clim, aes(x=nutrient, y=rich.mean, 
-                                  ymin=rich.mean-rich.se, 
-                                  ymax=rich.mean+rich.se,
-                                  color=light, shape = climate)) +
-  facet_grid(month~grazing) +
-  geom_point(size=2, position=position_dodge(0.2)) +
-  geom_errorbar(width=0.2, position=position_dodge(0.2)) +
-  ylab('Seedling richness') +
-  xlab('') +
-  theme_cw() +
-  theme(text = element_text(size=12)) +
-  scale_color_manual(values=c('black','orange'), name='') +
-  theme(legend.position = 'bottom', legend.text=element_text(size=12))
-#ggsave(filename = 'nat_regen_richness_time.pdf', width=6, height=5, units='in')
-```
-
-### Seedling richness analysis
-#### With time
-```{r rich-seedling-time, echo=FALSE, warning=FALSE, message=FALSE}
-model.richness <- nat.seedlings.plot.sum %>%
-  lmer(richness ~ grazing + nutrient + light + month +
-         grazing:nutrient + grazing:light + grazing:month +
-         nutrient:light + nutrient:month + light:month +
-         grazing:nutrient:light + 
-         (1|block:plotid),.)
-tbl_regression(model.richness, 
-               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
-  'grazing:light','nutrient:light','grazing:nutrient:light'))
-
-# including climate
-model.richness.clim <- nat.seedlings.plot.sum %>%
-  lmer(richness ~ grazing + nutrient + light + month + climate +
-         grazing:nutrient + grazing:light + grazing:month + grazing:climate +
-         nutrient:light + nutrient:month + nutrient:climate + light:month + light:climate + month:climate + grazing:nutrient:light + grazing:nutrient:light:climate +
-         (1|block:plotid),.)
-tbl_regression(model.richness)
-```
-
-#### Fall only
-```{r rich-seedling-fall, echo=FALSE, warning=FALSE, message=FALSE}
-#NOTE: currently doesn't print warnings or messages, take this out while coding
-
-# want to use block:plot for random effect, but have the error
-# number of levels of each grouping factor must be < number of observations
-# would need a meta-plot that is the grazing x fert treatment instead
-model.richness.fall <- nat.seedlings.fall %>%
-  glmer(richness ~ grazing * nutrient * light + (1|block),.,
-        family = poisson(link="log"))
-tbl_regression(model.richness.fall, 
-               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
-                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
-
-# including climate
-model.richness.fall.clim <- nat.seedlings.fall %>%
-  glmer(richness ~ grazing * nutrient * light * climate + (1|block),.,
-        family = poisson(link="log"))
-tbl_regression(model.richness.fall.clim)
-```
-
-#### Spring only
-```{r rich-seedling-spring, echo=FALSE, warning=FALSE, message=FALSE}
-#NOTE: currently doesn't print warnings or messages, take this out while coding
-
-model.richness.spring <- nat.seedlings.spring %>%
-  glmer(richness ~ grazing * nutrient * light + (1|block),.,
-        family = poisson(link="log"))
-tbl_regression(model.richness.spring, 
-               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
-                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
-
-# including climate
-model.richness.spring.clim <- nat.seedlings.spring %>%
-  glmer(richness ~ grazing * nutrient * light * climate + (1|block),.,
-        family = poisson(link="log"))
-tbl_regression(model.richness.spring.clim)
-```
-
-#### Both combined
-```{r rich-seedling-both, echo=FALSE, warning=FALSE, message=FALSE}
-#NOTE: currently doesn't print warnings or messages, take this out while coding
-
-model.richness.both <- nat.seedlings.plot.both %>%
-  glmer(richness ~ grazing * nutrient * light + (1|block),.,
-        family = poisson(link="log"))
-tbl_regression(model.richness.both, 
-               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
-                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
-# including climate
-model.richness.both.clim <- nat.seedlings.plot.both %>%
-  glmer(richness ~ grazing * nutrient * light * climate + (1|block),.,
-        family = poisson(link="log"))
-tbl_regression(model.richness.both.clim)
-
-```
-
-#### April/May 
-```{r rich-seedling-late, echo=FALSE, warning=FALSE, message=FALSE}
-#NOTE: currently doesn't print warnings or messages, take this out while coding
-
-model.richness.late <- nat.seedlings.late %>%
-  glmer(richness ~ grazing * nutrient * light + (1|block),.,
-        family = poisson(link="log"))
-tbl_regression(model.richness.late, 
-               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
-                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
-
-# including climate
-model.richness.late.clim <- nat.seedlings.late %>%
-  glmer(richness ~ grazing * nutrient * light * climate + (1|block),.,
-        family = poisson(link="log"))
-tbl_regression(model.richness.late.clim)
-```
-
-
 
 ## Seedling Traits
 
@@ -650,34 +344,37 @@ ggplot(nat.seedlings.traits.sum.clim, aes(x = bm.tot, y = abundance,
 ```
 
 
-Analysis of total biomass trait using a negative binomial distribution. 
+Analysis of total biomass trait using a negative binomial distribution. We do see some (although not particularly strong patterns). Tested to see if this was robust to removing lamium from the dataset (which has a MUCH higher biomass than everything else) and yes, the values are nearly identical with and without it. 
 ```{r trait-biomass-analysis, echo=FALSE, warning=FALSE, message=FALSE}
+# TEST: removing lamium to see if the patterns hold up
+nat.seedlings.traits.no.lam <- filter(nat.seedlings.traits, !(species == 'lamsp'))
 
-m.biomass.0 <- glmmTMB(count.max ~ grazing * nutrient + light +
+m.biomass.0 <- glmmTMB(count.max ~ grazing + nutrient + light +
                          (1|species) + (1|block:plotid),
                        nat.seedlings.traits, family = nbinom2)
 
-m.biomass.1 <- glmmTMB(count.max ~ grazing * nutrient + light + bm.tot +
-                         (1|block:plotid), 
-                 nat.seedlings.traits, family = nbinom2)
 
-m.biomass.2 <- glmmTMB(count.max ~ grazing * nutrient + light + bm.tot +
+m.biomass.1 <- glmmTMB(count.max ~ grazing + nutrient + light + bm.tot +
                          (1|species) + (1|block:plotid), 
                  nat.seedlings.traits, family = nbinom2)
 
 
-m.biomass.full <- glmmTMB(count.max ~ grazing * nutrient + light + bm.tot +
+m.biomass.full <- glmmTMB(count.max ~ grazing + nutrient + light + bm.tot +
                             grazing*nutrient*light*bm.tot +
                          (1|species) + (1|block:plotid), 
                  nat.seedlings.traits, family = nbinom2)
 
-m.biomass.specific <- glmmTMB(count.max ~ grazing * nutrient + light + bm.tot +
-                            light*grazing*bm.tot + light*grazing*nutrient + 
+summary(m.biomass.full) 
+
+# remove non-significant interactions
+m.biomass.specific <- glmmTMB(count.max ~ grazing + nutrient + light + bm.tot +
+                            nutrient*grazing*bm.tot + 
                          (1|species) + (1|block:plotid), 
                  nat.seedlings.traits, family = nbinom2)
+
 summary(m.biomass.specific)
 
-AICtab(m.biomass.0, m.biomass.1, m.biomass.2, m.biomass.full, m.biomass.specific)
+AICtab(m.biomass.0, m.biomass.1, m.biomass.full, m.biomass.specific)
 
 E2 <- resid(m.biomass.specific, type = "pearson")
 N  <- nrow(nat.seedlings.traits)
@@ -685,47 +382,49 @@ p  <- length(coef(m.biomass.specific))
 sum(E2^2) / (N - p) # somewhat overdispersed
 
 # including climate
-m.biomass1.0 <- glmmTMB(count.max ~ grazing * nutrient + climate + light +
+m.biomass.clim.0 <- glmmTMB(count.max ~ grazing + nutrient + climate + light +
                          (1|species) + (1|block:plotid),
                        nat.seedlings.traits, family = nbinom2)
 
-m.biomass1.1 <- glmmTMB(count.max ~ grazing * nutrient + climate + light + bm.tot +
-                         (1|block:plotid), 
-                 nat.seedlings.traits, family = nbinom2)
-
-m.biomass1.2 <- glmmTMB(count.max ~ grazing * nutrient + climate + light + bm.tot +
+m.biomass.clim.1 <- glmmTMB(count.max ~ grazing + nutrient + climate + light + bm.tot +
                          (1|species) + (1|block:plotid), 
                  nat.seedlings.traits, family = nbinom2)
 
 
-m.biomass1.full <- glmmTMB(count.max ~ grazing * nutrient + climate + light + bm.tot +
+m.biomass.clim.full <- glmmTMB(count.max ~ grazing + nutrient + climate + light + bm.tot +
                            grazing*nutrient*climate*light*bm.tot +
                          (1|species) + (1|block:plotid), 
                  nat.seedlings.traits, family = nbinom2)
 
-m.biomass1.specific <- glmmTMB(count.max ~ grazing * nutrient + climate + light + bm.tot +
-                           light*grazing*bm.tot + light*grazing*nutrient + climate*light*bm.tot +   climate*nutrient*bm.tot + climate*grazing*bm.tot +
+summary(m.biomass.clim.full)
+
+# remove non-significant interactions
+
+m.biomass.clim.specific <- glmmTMB(count.max ~ grazing + nutrient + 
+                                     climate + light + bm.tot +
+                           nutrient*grazing*bm.tot +
                          (1|species) + (1|block:plotid), 
                  nat.seedlings.traits, family = nbinom2)
-summary(m.biomass1.specific)
+summary(m.biomass.clim.specific)
 
-AICtab(m.biomass1.0, m.biomass1.1, m.biomass1.2, m.biomass1.full, m.biomass1.specific)
+AICtab(m.biomass.clim.0, m.biomass.clim.1, m.biomass.clim.full, m.biomass.clim.specific)
 
-E2 <- resid(m.biomass1.specific, type = "pearson")
+E2 <- resid(m.biomass.clim.specific, type = "pearson")
 N  <- nrow(nat.seedlings.traits)
-p  <- length(coef(m.biomass1.specific)) 
+p  <- length(coef(m.biomass.clim.specific)) 
 sum(E2^2) / (N - p)
 ```
 
-Counterfactual plots (not including nutrients, since they don't interact with the traits). Using re.form = NA to specific population-level predictions (setting all random effects to zero)
+Counterfactual plot of biomass x grazing x nutrient interaction. Using re.form = NA to specific population-level predictions (setting all random effects to zero)
 ```{r trait-biomass-plots2, echo=FALSE, warning=FALSE, message=FALSE}
+# TEST: removing lamium to see if the patterns hold up
+nat.seedlings.traits.no.lam <- filter(nat.seedlings.traits, !(species == 'lamsp'))
+new.data.no.lam <- filter(new.data, bm.tot < 100)
 
-
-# currently without nitrogen
-# can also try adding it back in and doing the prediction more clearly
-m.biomass.simple <- glmmTMB(count.max ~ light*grazing*bm.tot + 
+# simplified (without light or climate) for plotting
+m.biomass.simple <- glmmTMB(count.max ~ nutrient*grazing*bm.tot + 
                           (1|species) + (1|block:plotid), 
-                 nat.seedlings.traits, family = nbinom2)
+                 nat.seedlings.traits.no.lam, family = nbinom2)
 
 m.biomass.fit <- predict(m.biomass.simple, new.data, allow.new.levels = TRUE, se.fit = TRUE,
                      re.form = NA, type = 'response')
@@ -734,21 +433,70 @@ new.data$biomass.fit.se <- m.biomass.fit$se.fit
 
 ggplot(NULL) + 
   facet_grid(.~grazing) +
-  geom_line(data = new.data, size = 1.2, aes(x = bm.tot, y = biomass.fit, color = light)) + 
+  geom_line(data = new.data, size = 1.2, 
+            aes(x = bm.tot, y = biomass.fit, color = nutrient)) + 
   geom_ribbon(data = new.data, alpha = 0.3,
               aes(x = bm.tot, y = biomass.fit, 
                   ymin = biomass.fit - biomass.fit.se, ymax = biomass.fit + biomass.fit.se,
-                  fill = light)) +
- # geom_point(data = nat.seedlings.traits.sum.2, aes(x = bm.tot, y = abundance, color = light)) + 
+                  fill = nutrient)) +
+  # geom_point(data = nat.seedlings.traits.sum.2, aes(x = bm.tot, y = abundance, color = light)) + 
   theme_cw() + 
   theme(text = element_text(size=12)) +
-  scale_color_manual(values=c('black','orange'), name='') +
-  scale_fill_manual(values=c('black','orange'), name='') +
+  #  scale_color_manual(values=c('black','orange'), name='') +
+  #  scale_fill_manual(values=c('black','orange'), name='') +
   theme(legend.position = 'bottom', legend.text=element_text(size=12)) + 
   ylab('Predicted abundance') + 
   xlab('Biomass')
 #ggsave('biomass-model.pdf', width = 6, height = 4, units = 'in')
 
+
+# Easier to visualize the other way around 
+# In fertilized plots, trait relationship doesn't depend on grazing
+# but in unfertilized plots, it does (sharp threshold in exclosure plots)
+
+ggplot(NULL) + 
+  facet_grid(.~nutrient) +
+  geom_line(data = new.data, size = 1.2, 
+            aes(x = bm.tot, y = biomass.fit, color = grazing)) + 
+  geom_ribbon(data = new.data, alpha = 0.3,
+              aes(x = bm.tot, y = biomass.fit, 
+                  ymin = biomass.fit - biomass.fit.se, ymax = biomass.fit + biomass.fit.se,
+                  fill = grazing)) +
+  # geom_point(data = nat.seedlings.traits.sum.2, aes(x = bm.tot, y = abundance, color = light)) + 
+  theme_cw() + 
+  theme(text = element_text(size=12)) +
+  #  scale_color_manual(values=c('black','orange'), name='') +
+  #  scale_fill_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'bottom', legend.text=element_text(size=12)) + 
+  ylab('Predicted abundance') + 
+  xlab('Biomass')
+
+# one more version, just looking at the nutrient x biomass interaction
+m.biomass.simple.2 <- glmmTMB(count.max ~ nutrient*bm.tot + 
+                          (1|species) + (1|block:plotid), 
+                 nat.seedlings.traits, family = nbinom2)
+
+m.biomass.fit.2 <- predict(m.biomass.simple.2, new.data, allow.new.levels = TRUE, se.fit = TRUE,
+                     re.form = NA, type = 'response')
+new.data$biomass.fit.2 <- m.biomass.fit.2$fit
+new.data$biomass.fit.se.2 <- m.biomass.fit.2$se.fit
+
+ggplot(NULL) + 
+  geom_line(data = new.data, size = 1.2, 
+            aes(x = bm.tot, y = biomass.fit.2, color = nutrient)) + 
+  geom_ribbon(data = new.data, alpha = 0.3,
+              aes(x = bm.tot, y = biomass.fit.2, 
+                  ymin = biomass.fit.2 - biomass.fit.se.2, 
+                  ymax = biomass.fit.2 + biomass.fit.se.2,
+                  fill = nutrient)) +
+  # geom_point(data = nat.seedlings.traits.sum.2, aes(x = bm.tot, y = abundance, color = light)) + 
+  theme_cw() + 
+  theme(text = element_text(size=12)) +
+  #  scale_color_manual(values=c('black','orange'), name='') +
+  #  scale_fill_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'bottom', legend.text=element_text(size=12)) + 
+  ylab('Predicted abundance') + 
+  xlab('Biomass')
 
 ```
 
@@ -811,30 +559,35 @@ ggplot(nat.seedlings.traits.sum.clim, aes(x = sla, y = abundance,
 Analysis of SLA
 ```{r trait-sla-analysis, echo=FALSE, warning=FALSE, message=FALSE}
 
-m.sla.0 <- glmmTMB(count.max ~ grazing * nutrient + light +
+m.sla.0 <- glmmTMB(count.max ~ grazing + nutrient + light +
                          (1|species) + (1|block:plotid),
                        nat.seedlings.traits, family = nbinom2)
 
-m.sla.1 <- glmmTMB(count.max ~ grazing * nutrient + light + sla.2 +
-                         (1|block:plotid), 
-                 nat.seedlings.traits, family = nbinom2)
-
-m.sla.2 <- glmmTMB(count.max ~ grazing * nutrient + light + sla.2 +
+m.sla.1 <- glmmTMB(count.max ~ grazing + nutrient + light + sla.2 +
                          (1|species) + (1|block:plotid), 
                  nat.seedlings.traits, family = nbinom2)
 
-m.sla.full <- glmmTMB(count.max ~ grazing * nutrient + light + sla.2 +
+m.sla.full <- glmmTMB(count.max ~ grazing + nutrient + light + sla.2 +
                             grazing*nutrient*light*sla.2 +
                         (1|species) + (1|block:plotid), 
                  nat.seedlings.traits, family = nbinom2)
 
-m.sla.specific <- glmmTMB(count.max ~ grazing * nutrient + light + sla.2 +
-                            light*grazing*sla.2 + grazing*nutrient*light +
+summary(m.sla.full) # has the full 4-way interaction
+
+m.sla.specific <- glmmTMB(count.max ~ grazing + nutrient + light + sla.2 +
+                            grazing*nutrient*light +
+                            light*grazing*sla.2 + light*nutrient*sla.2 +
                         (1|species) + (1|block:plotid), 
                  nat.seedlings.traits, family = nbinom2)
-#summary(m.sla.specific)
+summary(m.sla.specific) 
 
-AICtab(m.sla.0, m.sla.1, m.sla.2, m.sla.full, m.sla.specific)
+m.sla.specific.2 <- glmmTMB(count.max ~ grazing + nutrient + light + sla.2 +
+                            light*grazing*sla.2 + 
+                        (1|species) + (1|block:plotid), 
+                 nat.seedlings.traits, family = nbinom2)
+summary(m.sla.specific.2) 
+
+AICtab(m.sla.0, m.sla.1,  m.sla.full, m.sla.specific, m.sla.specific.2)
 
 E2 <- resid(m.sla.specific, type = "pearson")
 N  <- nrow(nat.seedlings.traits)
@@ -850,34 +603,35 @@ tbl_regression(m.sla.specific,
                                    'grazing:light:sla.2'))
 
 # including climate
-m.sla.1.0 <- glmmTMB(count.max ~ grazing * nutrient + light + climate +
+m.sla.clim.0 <- glmmTMB(count.max ~ grazing + nutrient + light + climate +
                          (1|species) + (1|block:plotid),
                        nat.seedlings.traits, family = nbinom2)
 
-m.sla.1.1 <- glmmTMB(count.max ~ grazing * nutrient + light + climate + sla.2 +
-                         (1|block:plotid), 
-                 nat.seedlings.traits, family = nbinom2)
 
-m.sla.1.2 <- glmmTMB(count.max ~ grazing * nutrient + light + climate + sla.2 +
+m.sla.clim.1 <- glmmTMB(count.max ~ grazing + nutrient + light + climate + sla.2 +
                          (1|species) + (1|block:plotid), 
                  nat.seedlings.traits, family = nbinom2)
 
-m.sla.1.full <- glmmTMB(count.max ~ grazing * nutrient + light + climate + sla.2 +
+m.sla.clim.full <- glmmTMB(count.max ~ grazing + nutrient + light + climate + sla.2 +
                             grazing*nutrient*light*climate*sla.2 +
                         (1|species) + (1|block:plotid), 
                  nat.seedlings.traits, family = nbinom2)
+summary(m.sla.clim.full)
 
-m.sla.1.specific <- glmmTMB(count.max ~ grazing * nutrient + light + climate + sla.2 +
-                           grazing*nutrient*light + grazing*light*sla.2 + nutrient*light*sla.2 + grazing*nutrient*climate*sla.2 +
+m.sla.clim.specific <- glmmTMB(count.max ~ grazing + nutrient + light + climate + sla.2 +
+                           grazing*nutrient*light + grazing*nutrient*climate +
+                             grazing*nutrient*sla.2 + grazing*light*sla.2 +
+                             nutrient*light*sla.2 + nutrient*climate*sla.2 +
+                             grazing*nutrient*climate*sla.2 +
                         (1|species) + (1|block:plotid), 
                  nat.seedlings.traits, family = nbinom2)
-summary(m.sla.1.specific)
+summary(m.sla.clim.specific) # yikes, 4-way interactions. Hard to visualize/interpret
 
-AICtab(m.sla.1.0, m.sla.1.1, m.sla.1.2, m.sla.1.full, m.sla.1.specific)
+AICtab(m.sla.clim.0, m.sla.clim.1, m.sla.clim.full, m.sla.clim.specific)
 
-E2 <- resid(m.sla.1.specific, type = "pearson")
+E2 <- resid(m.sla.clim.specific, type = "pearson")
 N  <- nrow(nat.seedlings.traits)
-p  <- length(coef(m.sla.1.specific)) 
+p  <- length(coef(m.sla.clim.specific)) 
 sum(E2^2) / (N - p) 
 
 # simplified summary of model coefficients

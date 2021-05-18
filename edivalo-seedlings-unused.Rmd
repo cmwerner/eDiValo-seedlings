@@ -1,0 +1,311 @@
+---
+title: "edivalo-seedlings-unused"
+output: html_document
+---
+
+For summary richness and count analyses, need to make sure block and plotid are being treated as factors
+## Total seedlings count
+Summary for plotting total and richness (code not printed)
+```{r summary-plot, echo=FALSE, warning=FALSE, message=FALSE}
+#NOTE: currently doesn't print warnings or messages, take this out while coding
+
+# summarize by month and treatments for plotting
+nat.seedlings.summary <- nat.seedlings.plot.sum.2 %>% 
+  group_by(grazing, nutrient, light, month) %>%
+  dplyr::summarise(
+    n = length(total),
+        total.mean = mean(total),
+        total.se = sd(total)/sqrt(n),
+        rich.mean = mean(richness),
+        rich.se = sd(richness)/sqrt(n)
+  )
+
+# including climate
+nat.seedlings.summary.clim <- nat.seedlings.plot.sum.2 %>% 
+  group_by(climate,grazing, nutrient, light, month) %>%
+  dplyr::summarise(
+    n = length(total),
+        total.mean = mean(total),
+        total.se = sd(total)/sqrt(n),
+        rich.mean = mean(richness),
+        rich.se = sd(richness)/sqrt(n)
+  )
+
+```
+
+Summary for analyzing total and richness (code not printed)
+```{r summary-analysis, echo=FALSE, warning=FALSE, message=FALSE}
+#NOTE: currently doesn't print warnings or messages, take this out while coding
+# splitting data into just fall or just spring for modeling
+nat.seedlings.fall <- nat.seedlings.plot.sum %>% filter(month == '2019_10')
+nat.seedlings.spring <- nat.seedlings.plot.sum %>% filter(month == '2020_03')
+nat.seedlings.late <- nat.seedlings.plot.sum %>% filter(month == '2020_05')
+
+# combined fall and spring together
+nat.seedlings.long.fallspring <- nat.seedlings.long %>%
+  filter(month %in% c('2019_10', '2020_03'))
+
+nat.seedlings.plot.both <- nat.seedlings.long.fallspring %>% 
+  group_by(plotid, treat, block, climate, grazing, nutrient, light) %>%
+  dplyr::summarise(
+    total = sum(count),
+        richness = sum(count > 0)
+  )
+
+nat.seedlings.plot.both$block <- as_factor(nat.seedlings.plot.both$block)
+nat.seedlings.plot.both$plotid <- as_factor(nat.seedlings.plot.both$plotid)
+```
+
+
+### Total seedling count plot
+```{r summary-plot-total, echo=FALSE, warning=FALSE, message=FALSE}
+#NOTE: currently doesn't print warnings or messages, take this out while coding}
+ggplot(nat.seedlings.summary, aes(x=nutrient, y=total.mean, 
+                                  ymin=total.mean-total.se,
+                                  ymax=total.mean+total.se,
+                                  color=light)) +
+  facet_grid(month~grazing) +
+  geom_point(size=2, position=position_dodge(0.2)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.2)) +
+  ylab('Total seedling count') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'bottom', legend.text=element_text(size=12))
+
+# including climate
+ggplot(nat.seedlings.summary.clim, aes(x=nutrient, y=total.mean, 
+                                  ymin=total.mean-total.se,
+                                  ymax=total.mean+total.se,
+                                  color=light, shape = climate)) +
+  facet_grid(month~grazing) +
+  geom_point(size=2, position=position_dodge(0.2)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.2)) +
+  ylab('Total seedling count') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'bottom', legend.text=element_text(size=12))
+
+#ggsave(filename = 'nat_regen_total_time.pdf', width=6, height=5, units='in')
+```
+
+### Total seedling analysis
+
+#### With time
+```{r total-seedling-time, echo=FALSE, warning=FALSE, message=FALSE}
+model.total <- nat.seedlings.plot.sum %>%
+  lmer(total ~ grazing + nutrient + light + month +
+         grazing:nutrient + grazing:light + grazing:month +
+         nutrient:light + nutrient:month + light:month +
+         grazing:nutrient:light + 
+         (1|block:plotid),.)
+tbl_regression(model.total, 
+               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
+  'grazing:light','nutrient:light','grazing:nutrient:light'))
+
+# including climate
+model.total.clim <- nat.seedlings.plot.sum %>%
+  lmer(total ~ grazing + nutrient + light + month + climate +
+         grazing:nutrient + grazing:light + grazing:month + grazing:climate +
+         nutrient:light + nutrient:month + nutrient:climate + light:month + light:climate + month:climate + grazing:nutrient:light + grazing:nutrient:light:climate +
+         (1|block:plotid),.)
+tbl_regression(model.total.clim)
+
+```
+
+
+Looking at October and March time points as 1. separate models or 2. a combined sum. I think we can make the argument that if we do it this way we won't need time series analyses since we expect Oct seedlings to have died or grown by March, mostly not resampling the same individuals. But there are other approaches to this that use the time series angle.
+
+#### Fall only
+```{r tot-seedling-fall, echo=FALSE, warning=FALSE, message=FALSE}
+#NOTE: currently doesn't print warnings or messages, take this out while coding
+
+# want to use block:plot for random effect, but have the error
+# number of levels of each grouping factor must be < number of observations
+# would need a meta-plot that is the grazing x fert treatment instead
+model.total.fall <- nat.seedlings.fall %>%
+  lmer(total ~ grazing * nutrient * light + (1|block),.)
+tbl_regression(model.total.fall, 
+               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
+  'grazing:light','nutrient:light','grazing:nutrient:light'))
+
+# including climate
+model.total.fall.clim <- nat.seedlings.fall %>%
+  lmer(total ~ grazing * nutrient * light *climate + (1|block),.)
+tbl_regression(model.total.fall.clim, 
+               show_single_row = c('grazing','nutrient','light', 'climate','grazing:nutrient',
+  'grazing:light','nutrient:light','grazing:nutrient:light'))
+```
+
+#### Spring only
+```{r tot-seedling-spring, echo=FALSE, warning=FALSE, message=FALSE}
+#NOTE: currently doesn't print warnings or messages, take this out while coding
+
+model.total.spring <- nat.seedlings.spring %>%
+  lmer(total ~ grazing * nutrient * light + (1|block),.)
+tbl_regression(model.total.spring, 
+               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
+                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
+# including climate
+model.total.spring.clim <- nat.seedlings.spring %>%
+  lmer(total ~ grazing * nutrient * light * climate + (1|block),.)
+tbl_regression(model.total.spring.clim, 
+               show_single_row = c('grazing','nutrient','light', 'climate','grazing:nutrient',
+                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
+```
+
+#### Both combined
+```{r tot-seedling-both, echo=FALSE, warning=FALSE, message=FALSE}
+#NOTE: currently doesn't print warnings or messages, take this out while coding
+
+model.total.both <- nat.seedlings.plot.both %>%
+  lmer(total ~ grazing * nutrient * light + (1|block),.)
+tbl_regression(model.total.both, 
+               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
+                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
+# including climate
+model.total.both.clim <- nat.seedlings.plot.both %>%
+  lmer(total ~ grazing * nutrient * light * climate + (1|block),.)
+tbl_regression(model.total.both.clim, 
+               show_single_row = c('grazing','nutrient','light', 'climate','grazing:nutrient',
+                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
+
+```
+
+
+## Seedling richness
+### Seedling richness plot
+```{r summary-plot-richness, echo=FALSE, warning=FALSE, message=FALSE}
+#NOTE: currently doesn't print warnings or messages, take this out while coding}
+ggplot(nat.seedlings.summary, aes(x=nutrient, y=rich.mean, 
+                                  ymin=rich.mean-rich.se, 
+                                  ymax=rich.mean+rich.se,
+                                  color=light)) +
+  facet_grid(month~grazing) +
+  geom_point(size=2, position=position_dodge(0.2)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.2)) +
+  ylab('Seedling richness') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'bottom', legend.text=element_text(size=12))
+
+# including climate
+ggplot(nat.seedlings.summary.clim, aes(x=nutrient, y=rich.mean, 
+                                  ymin=rich.mean-rich.se, 
+                                  ymax=rich.mean+rich.se,
+                                  color=light, shape = climate)) +
+  facet_grid(month~grazing) +
+  geom_point(size=2, position=position_dodge(0.2)) +
+  geom_errorbar(width=0.2, position=position_dodge(0.2)) +
+  ylab('Seedling richness') +
+  xlab('') +
+  theme_cw() +
+  theme(text = element_text(size=12)) +
+  scale_color_manual(values=c('black','orange'), name='') +
+  theme(legend.position = 'bottom', legend.text=element_text(size=12))
+#ggsave(filename = 'nat_regen_richness_time.pdf', width=6, height=5, units='in')
+```
+
+### Seedling richness analysis
+#### With time
+```{r rich-seedling-time, echo=FALSE, warning=FALSE, message=FALSE}
+model.richness <- nat.seedlings.plot.sum %>%
+  lmer(richness ~ grazing + nutrient + light + month +
+         grazing:nutrient + grazing:light + grazing:month +
+         nutrient:light + nutrient:month + light:month +
+         grazing:nutrient:light + 
+         (1|block:plotid),.)
+tbl_regression(model.richness, 
+               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
+  'grazing:light','nutrient:light','grazing:nutrient:light'))
+
+# including climate
+model.richness.clim <- nat.seedlings.plot.sum %>%
+  lmer(richness ~ grazing + nutrient + light + month + climate +
+         grazing:nutrient + grazing:light + grazing:month + grazing:climate +
+         nutrient:light + nutrient:month + nutrient:climate + light:month + light:climate + month:climate + grazing:nutrient:light + grazing:nutrient:light:climate +
+         (1|block:plotid),.)
+tbl_regression(model.richness)
+```
+
+#### Fall only
+```{r rich-seedling-fall, echo=FALSE, warning=FALSE, message=FALSE}
+#NOTE: currently doesn't print warnings or messages, take this out while coding
+
+# want to use block:plot for random effect, but have the error
+# number of levels of each grouping factor must be < number of observations
+# would need a meta-plot that is the grazing x fert treatment instead
+model.richness.fall <- nat.seedlings.fall %>%
+  glmer(richness ~ grazing * nutrient * light + (1|block),.,
+        family = poisson(link="log"))
+tbl_regression(model.richness.fall, 
+               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
+                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
+
+# including climate
+model.richness.fall.clim <- nat.seedlings.fall %>%
+  glmer(richness ~ grazing * nutrient * light * climate + (1|block),.,
+        family = poisson(link="log"))
+tbl_regression(model.richness.fall.clim)
+```
+
+#### Spring only
+```{r rich-seedling-spring, echo=FALSE, warning=FALSE, message=FALSE}
+#NOTE: currently doesn't print warnings or messages, take this out while coding
+
+model.richness.spring <- nat.seedlings.spring %>%
+  glmer(richness ~ grazing * nutrient * light + (1|block),.,
+        family = poisson(link="log"))
+tbl_regression(model.richness.spring, 
+               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
+                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
+
+# including climate
+model.richness.spring.clim <- nat.seedlings.spring %>%
+  glmer(richness ~ grazing * nutrient * light * climate + (1|block),.,
+        family = poisson(link="log"))
+tbl_regression(model.richness.spring.clim)
+```
+
+#### Both combined
+```{r rich-seedling-both, echo=FALSE, warning=FALSE, message=FALSE}
+#NOTE: currently doesn't print warnings or messages, take this out while coding
+
+model.richness.both <- nat.seedlings.plot.both %>%
+  glmer(richness ~ grazing * nutrient * light + (1|block),.,
+        family = poisson(link="log"))
+tbl_regression(model.richness.both, 
+               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
+                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
+# including climate
+model.richness.both.clim <- nat.seedlings.plot.both %>%
+  glmer(richness ~ grazing * nutrient * light * climate + (1|block),.,
+        family = poisson(link="log"))
+tbl_regression(model.richness.both.clim)
+
+```
+
+#### April/May 
+```{r rich-seedling-late, echo=FALSE, warning=FALSE, message=FALSE}
+#NOTE: currently doesn't print warnings or messages, take this out while coding
+
+model.richness.late <- nat.seedlings.late %>%
+  glmer(richness ~ grazing * nutrient * light + (1|block),.,
+        family = poisson(link="log"))
+tbl_regression(model.richness.late, 
+               show_single_row = c('grazing','nutrient','light','grazing:nutrient',
+                                   'grazing:light','nutrient:light','grazing:nutrient:light'))
+
+# including climate
+model.richness.late.clim <- nat.seedlings.late %>%
+  glmer(richness ~ grazing * nutrient * light * climate + (1|block),.,
+        family = poisson(link="log"))
+tbl_regression(model.richness.late.clim)
+```
+
+
